@@ -28,7 +28,10 @@ service cloud.firestore {
 
     function isBootstrappedAdmin() {
       return isSignedIn() &&
-        request.auth.token.email == 'herzz@smkn2banjar-jabar.sch.id' &&
+        request.auth.token.email in [
+          'herzz@smkn2banjar-jabar.sch.id',
+          'heriadi0907@gmail.com'
+        ] &&
         request.auth.token.email_verified == true;
     }
 

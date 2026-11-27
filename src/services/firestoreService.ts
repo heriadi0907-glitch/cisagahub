@@ -37,7 +37,11 @@ import type {
   UmkmStatus,
   UmkmTier,
 } from '../types/umkm';
-import { validateContactMessageForm, validateTestimonialForm } from '../utils/umkmLogic';
+import {
+  isAuthorizedAdminEmail,
+  validateContactMessageForm,
+  validateTestimonialForm,
+} from '../utils/umkmLogic';
 
 export const BOOTSTRAPPED_ADMIN_EMAIL = 'herzz@smkn2banjar-jabar.sch.id';
 
@@ -207,16 +211,26 @@ function mapDocToContact(id: string, data: DocumentData): ContactMessage {
 }
 
 export function isSingleAuthorizedGoogleAccount(user: User | null): boolean {
-  if (!user || !user.email) return false;
-  return (
-    user.email.trim().toLowerCase() === BOOTSTRAPPED_ADMIN_EMAIL.toLowerCase() &&
-    Boolean(user.emailVerified)
-  );
+  if (!user) return false;
+  return isAuthorizedAdminEmail(user.email, Boolean(user.emailVerified));
 }
 
 export async function isAuthorizedAdminUser(user: User | null): Promise<boolean> {
-  return isSingleAuthorizedGoogleAccount(user);
+  return isAuthorizedAdminEmail(user?.email, Boolean(user?.emailVerified));
 }
+
+const LEGACY_SEED_IDS = new Set([
+  'gula-aren-bangunharja',
+  'batik-ciamis-mekarmukti',
+  'hampers-karya-cisaga',
+  'sale-pisang-wangunjaya',
+  'anyaman-bambu-tanjungjaya',
+  'kopi-kepel-cisaga',
+]);
+const VERIFIED_GMAPS_LISTINGS = INITIAL_UMKM_LISTINGS.filter(
+  (item) => item.id.startsWith('gmaps-') && item.status === 'Aktif'
+);
+const GMAPS_SEED_MARKER_KEY = 'cisaga_gmaps_seeded_v1';
 
 export function subscribePublicActiveListings(
   onData: (listings: UmkmListing[]) => void
@@ -230,6 +244,13 @@ export function subscribePublicActiveListings(
         return;
       }
       const items = snapshot.docs.map((d) => mapDocToListing(d.id, d.data()));
+      const hasAnyGmapsDoc = items.some((item) => item.id.startsWith('gmaps-'));
+      const onlyLegacySeedDocs =
+        items.length <= LEGACY_SEED_IDS.size && items.every((item) => LEGACY_SEED_IDS.has(item.id));
+      if (!hasAnyGmapsDoc && onlyLegacySeedDocs) {
+        onData([...items, ...VERIFIED_GMAPS_LISTINGS]);
+        return;
+      }
       onData(items);
     },
     (error) => {
@@ -241,17 +262,52 @@ export function subscribePublicActiveListings(
 export async function seedInitialListingsIfEmpty(): Promise<void> {
   try {
     const existingSnap = await getDocs(collection(db, 'umkm_listings'));
-    if (!existingSnap.empty) return;
-
-    const batch = writeBatch(db);
-    for (const item of INITIAL_UMKM_LISTINGS) {
-      batch.set(doc(db, 'umkm_listings', item.id), {
-        ...item,
-        galleryImages: item.galleryImages ?? [],
-        serverCreatedAt: serverTimestamp(),
-      });
+    if (existingSnap.empty) {
+      const batch = writeBatch(db);
+      for (const item of INITIAL_UMKM_LISTINGS) {
+        batch.set(doc(db, 'umkm_listings', item.id), {
+          ...item,
+          galleryImages: item.galleryImages ?? [],
+          serverCreatedAt: serverTimestamp(),
+        });
+      }
+      await batch.commit();
+      try {
+        localStorage.setItem(GMAPS_SEED_MARKER_KEY, 'done');
+      } catch {
+        // Ignore storage quota errors
+      }
+      return;
     }
-    await batch.commit();
+
+    const existingIds = new Set(existingSnap.docs.map((d) => d.id));
+    const hasAnyGmapsDoc = existingSnap.docs.some((d) => d.id.startsWith('gmaps-'));
+    let alreadySyncedLocally = false;
+    try {
+      alreadySyncedLocally = localStorage.getItem(GMAPS_SEED_MARKER_KEY) === 'done';
+    } catch {
+      alreadySyncedLocally = false;
+    }
+
+    if (!hasAnyGmapsDoc && !alreadySyncedLocally) {
+      const missingGmaps = VERIFIED_GMAPS_LISTINGS.filter((item) => !existingIds.has(item.id));
+      if (missingGmaps.length > 0) {
+        const batch = writeBatch(db);
+        for (const item of missingGmaps) {
+          batch.set(doc(db, 'umkm_listings', item.id), {
+            ...item,
+            galleryImages: item.galleryImages ?? [],
+            serverCreatedAt: serverTimestamp(),
+          });
+        }
+        await batch.commit();
+      }
+      try {
+        localStorage.setItem(GMAPS_SEED_MARKER_KEY, 'done');
+      } catch {
+        // Ignore storage quota errors
+      }
+    }
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, 'umkm_listings');
   }

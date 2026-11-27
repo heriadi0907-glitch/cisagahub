@@ -922,4 +922,19 @@ export function splitTextByHighlight(text: string, query: string): HighlightSegm
   return segments.length > 0 ? segments : [{ text, highlight: false }];
 }
 
+export const AUTHORIZED_ADMIN_EMAILS = [
+  'herzz@smkn2banjar-jabar.sch.id',
+  'heriadi0907@gmail.com',
+] as const;
+
+export function isAuthorizedAdminEmail(
+  email: string | null | undefined,
+  emailVerified: boolean
+): boolean {
+  if (!email || !emailVerified) return false;
+  const normalized = email.trim().toLowerCase();
+  return AUTHORIZED_ADMIN_EMAILS.some((allowed) => allowed === normalized);
+}
+
+
 

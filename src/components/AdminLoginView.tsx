@@ -36,23 +36,13 @@ export function AdminLoginView({
           Masuk Panel Admin CISAGA HUB
         </h1>
 
-        <p className="text-sm text-[#475569] leading-relaxed mb-4">
+        <p className="text-sm text-[#475569] leading-relaxed mb-5">
           {isLoading
             ? 'Memeriksa sesi autentikasi Panel Admin...'
             : isUnauthorizedUser && signedInEmail
-              ? `Akun ${signedInEmail} tidak memiliki izin akses. Panel ini terkunci hanya untuk akun Google pemilik.`
-              : 'Sistem pengelolaan CISAGA HUB dikunci secara eksklusif untuk satu akun Google terverifikasi.'}
+              ? `Akun ${signedInEmail} tidak memiliki izin akses untuk membuka Panel Admin.`
+              : 'Masuk menggunakan akun Google pengelola yang terdaftar untuk mengelola katalog UMKM dan portal CISAGA HUB.'}
         </p>
-
-        <div className="mb-5 px-3.5 py-2.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-xs text-[#475569]">
-          Akun diizinkan:{' '}
-          <span
-            data-testid="admin-allowed-email"
-            className="font-mono font-semibold text-[#0F2744]"
-          >
-            herzz@smkn2banjar-jabar.sch.id
-          </span>
-        </div>
 
         {errorMessage && (
           <div

@@ -195,7 +195,7 @@ export default function App() {
           setAdminMessages([]);
           setAdminTestimonials([]);
           setAuthError(
-            `Akses ditolak. Akun ${deniedEmail} tidak diizinkan. Sistem admin hanya dapat diakses oleh akun Google herzz@smkn2banjar-jabar.sch.id.`
+            `Akses ditolak. Akun ${deniedEmail} tidak memiliki izin akses Panel Admin.`
           );
           setIsAuthReady(true);
           return;
@@ -313,7 +313,7 @@ export default function App() {
         setIsAuthorizedAdmin(false);
         setFirebaseUser(null);
         setAuthError(
-          `Akses ditolak. Akun ${deniedEmail} tidak diizinkan. Gunakan akun Google resmi herzz@smkn2banjar-jabar.sch.id.`
+          `Akses ditolak. Akun ${deniedEmail} tidak memiliki izin akses Panel Admin.`
         );
       } else {
         setFeedbackMessage('Login admin berhasil.');

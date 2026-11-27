@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { INITIAL_UMKM_LISTINGS } from '../data/cisagaData';
+import { CISAGA_VILLAGES, INITIAL_UMKM_LISTINGS } from '../data/cisagaData';
 import {
   buildWhatsAppUrl,
   createAdminListingEntry,
@@ -16,6 +16,7 @@ import {
   getMonthlyUmkmRegistrationTrend,
   getPremiumTopListings,
   getTestimonialStats,
+  isAuthorizedAdminEmail,
   isDeveloperAdminPath,
   splitTextByHighlight,
   toggleListingTier,
@@ -544,6 +545,46 @@ test('splitTextByHighlight safely splits case-insensitive query matches without 
     { text: ' Tubruk', highlight: false },
   ]);
 });
+
+test('isAuthorizedAdminEmail authorizes verified owner and heriadi0907@gmail.com only', () => {
+  assert.equal(isAuthorizedAdminEmail('herzz@smkn2banjar-jabar.sch.id', true), true);
+  assert.equal(isAuthorizedAdminEmail('HERIADI0907@GMAIL.COM', true), true);
+  assert.equal(isAuthorizedAdminEmail('heriadi0907@gmail.com', false), false);
+  assert.equal(isAuthorizedAdminEmail('other@gmail.com', true), false);
+  assert.equal(isAuthorizedAdminEmail(null, true), false);
+});
+
+test('INITIAL_UMKM_LISTINGS covers all 11 Cisaga villages with Google Maps verified contacts and valid Firestore shapes', () => {
+  const validVillages = new Set(CISAGA_VILLAGES.map((v) => v.name));
+  const validCategories = new Set(['Kuliner', 'Kerajinan', 'Agribisnis', 'Busana']);
+
+  for (const village of CISAGA_VILLAGES) {
+    const gmapsInVillage = INITIAL_UMKM_LISTINGS.filter(
+      (item) => item.village === village.name && item.id.startsWith('gmaps-') && item.status === 'Aktif'
+    );
+    assert.ok(
+      gmapsInVillage.length >= 1,
+      `Expected at least 1 Google Maps verified UMKM for ${village.name}`
+    );
+  }
+
+  for (const item of INITIAL_UMKM_LISTINGS) {
+    assert.match(item.id, /^[a-zA-Z0-9_-]{2,80}$/);
+    assert.ok(item.businessName.length >= 3 && item.businessName.length <= 100);
+    assert.ok(item.ownerName.length >= 3 && item.ownerName.length <= 80);
+    assert.ok(item.productName.length >= 3 && item.productName.length <= 120);
+    assert.ok(validCategories.has(item.category));
+    assert.ok(validVillages.has(item.village));
+    assert.match(item.whatsapp, /^08[0-9]{8,13}$/);
+    assert.ok(item.price >= 1000 && item.price <= 100_000_000);
+    assert.ok(item.shortDescription.length >= 10 && item.shortDescription.length <= 300);
+    assert.ok(item.fullDescription.length >= 10 && item.fullDescription.length <= 1000);
+    assert.ok(item.variants.length >= 1 && item.variants.length <= 25);
+    assert.ok(item.variants[0].label.length >= 2 && item.variants[0].price >= 1000);
+  }
+});
+
+
 
 
 

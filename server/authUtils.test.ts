@@ -11,6 +11,7 @@ import {
   verifySessionToken,
 } from './authUtils.ts';
 import { createServerStore, resolveWritableDataDir } from './store.ts';
+import { INITIAL_UMKM_LISTINGS } from '../src/data/cisagaData.ts';
 
 test('scrypt password hashing and verification succeed only for matching password', () => {
   const hashed = hashPassword('CisagaDev#2026');
@@ -87,9 +88,10 @@ test('server store handles one-time developer setup, login verification, and env
 
 test('server store enforces public active filtering vs admin CRUD operations', () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hera-store-test-'));
+  const initialCount = INITIAL_UMKM_LISTINGS.length;
   try {
     const store = createServerStore(tempDir);
-    assert.equal(store.getPublicActiveListings().length, 6);
+    assert.equal(store.getPublicActiveListings().length, initialCount);
 
     // Public free registration creates Reguler + Menunggu Verifikasi (hidden from public until admin activates)
     const pendingFree = store.createFreeRegistration({
@@ -103,20 +105,20 @@ test('server store enforces public active filtering vs admin CRUD operations', (
     });
     assert.equal(pendingFree.tier, 'reguler');
     assert.equal(pendingFree.status, 'Menunggu Verifikasi');
-    assert.equal(store.getAllListings().length, 7);
-    assert.equal(store.getPublicActiveListings().length, 6);
+    assert.equal(store.getAllListings().length, initialCount + 1);
+    assert.equal(store.getPublicActiveListings().length, initialCount);
 
     // Admin activates pending free listing and upgrades to premium
     const activated = store.cycleStatus(pendingFree.id);
     assert.equal(activated.status, 'Aktif');
-    assert.equal(store.getPublicActiveListings().length, 7);
+    assert.equal(store.getPublicActiveListings().length, initialCount + 1);
 
     const promoted = store.toggleTier(pendingFree.id);
     assert.equal(promoted.tier, 'premium');
 
     // Admin deletes listing
     store.deleteListing(pendingFree.id);
-    assert.equal(store.getAllListings().length, 6);
+    assert.equal(store.getAllListings().length, initialCount);
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
@@ -124,6 +126,7 @@ test('server store enforces public active filtering vs admin CRUD operations', (
 
 test('server store preserves registered UMKM data while migrating built-in HERA seed name to CISAGA HUB', () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cisagahub-migrate-test-'));
+  const initialCount = INITIAL_UMKM_LISTINGS.length;
   try {
     const seedStore = createServerStore(tempDir);
     const customListing = seedStore.createFreeRegistration({
@@ -151,7 +154,7 @@ test('server store preserves registered UMKM data while migrating built-in HERA 
 
     const reloadedStore = createServerStore(tempDir);
     const allListings = reloadedStore.getAllListings();
-    assert.equal(allListings.length, 7);
+    assert.equal(allListings.length, initialCount + 1);
     assert.equal(
       allListings.find((i) => i.id === 'hampers-karya-cisaga')?.businessName,
       'Sentra Promosi CISAGA HUB'
