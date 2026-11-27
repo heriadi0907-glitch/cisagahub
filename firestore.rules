@@ -272,8 +272,104 @@ service cloud.firestore {
       allow delete: if isAdmin() && isValidId(listingId);
     }
 
+    function isValidTestimonialShape(data, testimonialId) {
+      return data.keys().hasAll([
+          'id',
+          'customerName',
+          'customerRole',
+          'umkmId',
+          'umkmName',
+          'productPurchased',
+          'rating',
+          'quote',
+          'isPublished',
+          'createdAt',
+          'serverCreatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id',
+          'customerName',
+          'customerRole',
+          'umkmId',
+          'umkmName',
+          'productPurchased',
+          'rating',
+          'quote',
+          'isPublished',
+          'createdAt',
+          'serverCreatedAt'
+        ]) &&
+        data.id is string &&
+        data.id == testimonialId &&
+        data.id.size() >= 4 &&
+        data.id.size() <= 80 &&
+        data.customerName is string &&
+        data.customerName.size() >= 2 &&
+        data.customerName.size() <= 80 &&
+        data.customerRole is string &&
+        data.customerRole.size() >= 2 &&
+        data.customerRole.size() <= 80 &&
+        data.umkmId is string &&
+        data.umkmId.size() >= 2 &&
+        data.umkmId.size() <= 80 &&
+        data.umkmId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.umkmName is string &&
+        data.umkmName.size() >= 2 &&
+        data.umkmName.size() <= 100 &&
+        data.productPurchased is string &&
+        data.productPurchased.size() <= 120 &&
+        data.rating is number &&
+        data.rating >= 1 &&
+        data.rating <= 5 &&
+        data.quote is string &&
+        data.quote.size() >= 10 &&
+        data.quote.size() <= 600 &&
+        data.isPublished is bool &&
+        data.createdAt is string &&
+        data.createdAt.size() >= 4 &&
+        data.createdAt.size() <= 40 &&
+        data.serverCreatedAt is timestamp;
+    }
+
+    function isValidTestimonialCreate(data, testimonialId) {
+      return isValidTestimonialShape(data, testimonialId) &&
+        data.serverCreatedAt == request.time;
+    }
+
+    function isValidTestimonialUpdate(data, prev, testimonialId) {
+      return isValidTestimonialShape(data, testimonialId) &&
+        data.id == prev.id &&
+        data.createdAt == prev.createdAt &&
+        data.serverCreatedAt == prev.serverCreatedAt &&
+        (
+          data.diff(prev).affectedKeys().hasOnly(['isPublished']) ||
+          data.diff(prev).affectedKeys().hasOnly([
+            'customerName',
+            'customerRole',
+            'umkmId',
+            'umkmName',
+            'productPurchased',
+            'rating',
+            'quote',
+            'isPublished'
+          ])
+        );
+    }
+
     match /admins/{userId} {
       allow read, write: if false;
+    }
+
+    match /testimonials/{testimonialId} {
+      allow get: if isValidId(testimonialId) && (existing().isPublished == true || isAdmin());
+      allow list: if resource.data.isPublished == true || isBootstrappedAdmin();
+      allow create: if isAdmin() &&
+        isValidId(testimonialId) &&
+        isValidTestimonialCreate(incoming(), testimonialId);
+      allow update: if isAdmin() &&
+        isValidId(testimonialId) &&
+        isValidTestimonialUpdate(incoming(), existing(), testimonialId);
+      allow delete: if isAdmin() && isValidId(testimonialId);
     }
   }
 }

@@ -11,6 +11,7 @@ import {
   LogOut,
   Mail,
   MessageCircle,
+  MessageSquareQuote,
   Plus,
   RefreshCw,
   Search,
@@ -27,6 +28,8 @@ import type {
   BusinessCategory,
   ContactMessage,
   ContactMessageStatus,
+  CustomerTestimonial,
+  CustomerTestimonialFormData,
   UmkmListing,
   UmkmStatus,
   UmkmTier,
@@ -44,6 +47,7 @@ import {
   isValidEmailAddress,
   validateAdminUmkmForm,
 } from '../utils/umkmLogic';
+import { AdminTestimonialsTab } from './AdminTestimonialsTab';
 import { ProductImage } from './ProductImage';
 import { UmkmRegistrationTrendChart } from './UmkmRegistrationTrendChart';
 
@@ -51,6 +55,7 @@ interface AdminPanelViewProps {
   adminUsername: string;
   listings: UmkmListing[];
   messages: ContactMessage[];
+  testimonials: CustomerTestimonial[];
   villages: VillageInfo[];
   onCreateListing: (data: AdminUmkmFormData) => Promise<void>;
   onUpdateListing: (id: string, data: AdminUmkmFormData) => Promise<void>;
@@ -61,10 +66,13 @@ interface AdminPanelViewProps {
   onUpdateMessageStatus: (id: string, status: ContactMessageStatus) => Promise<void>;
   onDeleteMessage: (id: string) => Promise<void>;
   onRefreshMessages: () => Promise<void>;
+  onCreateTestimonial: (data: CustomerTestimonialFormData) => Promise<void>;
+  onToggleTestimonialPublish: (id: string) => Promise<void>;
+  onDeleteTestimonial: (id: string) => Promise<void>;
   onLogout: () => Promise<void>;
 }
 
-type AdminWorkspaceTab = 'umkm' | 'messages';
+type AdminWorkspaceTab = 'umkm' | 'messages' | 'testimonials';
 
 const BUSINESS_CATEGORIES: BusinessCategory[] = [
   'Kuliner',
@@ -100,6 +108,7 @@ export function AdminPanelView({
   adminUsername,
   listings,
   messages,
+  testimonials,
   villages,
   onCreateListing,
   onUpdateListing,
@@ -110,6 +119,9 @@ export function AdminPanelView({
   onUpdateMessageStatus,
   onDeleteMessage,
   onRefreshMessages,
+  onCreateTestimonial,
+  onToggleTestimonialPublish,
+  onDeleteTestimonial,
   onLogout,
 }: AdminPanelViewProps) {
   const [workspaceTab, setWorkspaceTab] = useState<AdminWorkspaceTab>('umkm');
@@ -575,9 +587,33 @@ export function AdminPanelView({
             </span>
           )}
         </button>
+
+        <button
+          type="button"
+          role="tab"
+          data-testid="admin-tab-testimonials"
+          aria-selected={workspaceTab === 'testimonials'}
+          onClick={() => setWorkspaceTab('testimonials')}
+          className={`inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+            workspaceTab === 'testimonials'
+              ? 'bg-[#0F2744] text-white shadow-xs'
+              : 'text-[#475569] hover:text-[#0F2744]'
+          }`}
+        >
+          <MessageSquareQuote className="w-4 h-4" aria-hidden="true" />
+          <span>Testimoni Pelanggan ({testimonials.length})</span>
+        </button>
       </div>
 
-      {workspaceTab === 'messages' ? (
+      {workspaceTab === 'testimonials' ? (
+        <AdminTestimonialsTab
+          listings={listings}
+          testimonials={testimonials}
+          onCreateTestimonial={onCreateTestimonial}
+          onTogglePublish={onToggleTestimonialPublish}
+          onDeleteTestimonial={onDeleteTestimonial}
+        />
+      ) : workspaceTab === 'messages' ? (
         <div data-testid="admin-messages-view" className="space-y-6">
           {/* Inbox KPI Strip */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">

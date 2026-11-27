@@ -76,6 +76,18 @@ export function Footer({ onNavigatePublic, onOpenAdmin }: FooterProps) {
               </li>
               <li>
                 <a
+                  href="#testimoni"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onNavigatePublic('#testimoni');
+                  }}
+                  className="hover:text-[#0F2744] transition-colors"
+                >
+                  Testimoni Pelanggan
+                </a>
+              </li>
+              <li>
+                <a
                   href="#daftar-mitra"
                   onClick={(e) => {
                     e.preventDefault();

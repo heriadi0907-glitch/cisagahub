@@ -12,22 +12,33 @@ import { PartnerRegistrationSection } from './components/PartnerRegistrationSect
 import { PremiumTopSection } from './components/PremiumTopSection';
 import { ProductModal } from './components/ProductModal';
 import { SavedPromoDrawer } from './components/SavedPromoDrawer';
+import { TestimonialsSection } from './components/TestimonialsSection';
 import { VillageExplorerSection } from './components/VillageExplorerSection';
-import { CISAGA_VILLAGES, INITIAL_UMKM_LISTINGS } from './data/cisagaData';
+import {
+  CISAGA_VILLAGES,
+  INITIAL_TESTIMONIALS,
+  INITIAL_UMKM_LISTINGS,
+} from './data/cisagaData';
 import { auth, googleProvider } from './firebase';
 import {
   createAdminListingInFirestore,
   createContactMessageInFirestore,
   createFreeRegistrationInFirestore,
+  createTestimonialInFirestore,
   deleteContactInFirestore,
   deleteListingInFirestore,
+  deleteTestimonialInFirestore,
   isAuthorizedAdminUser,
   seedInitialListingsIfEmpty,
+  seedInitialTestimonialsIfEmpty,
   subscribeAllContactsAdmin,
   subscribeAllListingsAdmin,
+  subscribeAllTestimonialsAdmin,
   subscribePublicActiveListings,
+  subscribePublicTestimonials,
   toggleListingStatusInFirestore,
   toggleListingTierInFirestore,
+  toggleTestimonialPublishInFirestore,
   updateAdminListingInFirestore,
   updateContactStatusInFirestore,
 } from './services/firestoreService';
@@ -36,6 +47,8 @@ import type {
   ContactMessage,
   ContactMessageFormData,
   ContactMessageStatus,
+  CustomerTestimonial,
+  CustomerTestimonialFormData,
   FreeRegistrationFormData,
   ProductCategory,
   SavedPromoItem,
@@ -103,6 +116,9 @@ export default function App() {
   );
   const [adminListings, setAdminListings] = useState<UmkmListing[]>([]);
   const [adminMessages, setAdminMessages] = useState<ContactMessage[]>([]);
+  const [publicTestimonials, setPublicTestimonials] =
+    useState<CustomerTestimonial[]>(INITIAL_TESTIMONIALS);
+  const [adminTestimonials, setAdminTestimonials] = useState<CustomerTestimonial[]>([]);
 
   // Firebase Auth state for Admin Panel
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
@@ -137,12 +153,18 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [feedbackMessage]);
 
-  // Public real-time Firestore subscription for active UMKM listings
+  // Public real-time Firestore subscription for active UMKM listings & published testimonials
   useEffect(() => {
-    const unsubscribe = subscribePublicActiveListings((listings) => {
+    const unsubscribeListings = subscribePublicActiveListings((listings) => {
       setPublicListings(listings);
     });
-    return () => unsubscribe();
+    const unsubscribeTestimonials = subscribePublicTestimonials((testimonials) => {
+      setPublicTestimonials(testimonials);
+    });
+    return () => {
+      unsubscribeListings();
+      unsubscribeTestimonials();
+    };
   }, []);
 
   // Firebase Auth listener - strictly allow only BOOTSTRAPPED_ADMIN_EMAIL
@@ -153,6 +175,7 @@ export default function App() {
         setIsAuthorizedAdmin(false);
         setAdminListings([]);
         setAdminMessages([]);
+        setAdminTestimonials([]);
         setIsAuthReady(true);
         return;
       }
@@ -170,6 +193,7 @@ export default function App() {
           setIsAuthorizedAdmin(false);
           setAdminListings([]);
           setAdminMessages([]);
+          setAdminTestimonials([]);
           setAuthError(
             `Akses ditolak. Akun ${deniedEmail} tidak diizinkan. Sistem admin hanya dapat diakses oleh akun Google herzz@smkn2banjar-jabar.sch.id.`
           );
@@ -191,16 +215,21 @@ export default function App() {
     if (!isAuthReady || !isAuthorizedAdmin) return;
 
     void seedInitialListingsIfEmpty();
+    void seedInitialTestimonialsIfEmpty();
     const unsubscribeListings = subscribeAllListingsAdmin((listings) => {
       setAdminListings(listings);
     });
     const unsubscribeContacts = subscribeAllContactsAdmin((messages) => {
       setAdminMessages(messages);
     });
+    const unsubscribeTestimonials = subscribeAllTestimonialsAdmin((testimonials) => {
+      setAdminTestimonials(testimonials);
+    });
 
     return () => {
       unsubscribeListings();
       unsubscribeContacts();
+      unsubscribeTestimonials();
     };
   }, [isAuthReady, isAuthorizedAdmin]);
 
@@ -303,6 +332,7 @@ export default function App() {
       setIsAuthorizedAdmin(false);
       setAdminListings([]);
       setAdminMessages([]);
+      setAdminTestimonials([]);
       setFeedbackMessage('Sesi admin telah diakhiri.');
     } catch {
       setFeedbackMessage('Gagal keluar dari sesi admin.');
@@ -437,6 +467,30 @@ export default function App() {
     setFeedbackMessage('Kotak masuk disinkronkan secara langsung dengan database.');
   };
 
+  const handleCreateTestimonial = async (data: CustomerTestimonialFormData): Promise<void> => {
+    const created = await createTestimonialInFirestore(data, adminListings);
+    setFeedbackMessage(`Testimoni dari ${created.customerName} untuk ${created.umkmName} disimpan.`);
+  };
+
+  const handleToggleTestimonialPublish = async (id: string): Promise<void> => {
+    const target = adminTestimonials.find((t) => t.id === id);
+    if (!target) return;
+    const nextPublished = await toggleTestimonialPublishInFirestore(target);
+    setFeedbackMessage(
+      nextPublished
+        ? `Testimoni dari ${target.customerName} ditayangkan di beranda.`
+        : `Testimoni dari ${target.customerName} disembunyikan dari beranda.`
+    );
+  };
+
+  const handleDeleteTestimonial = async (id: string): Promise<void> => {
+    const target = adminTestimonials.find((t) => t.id === id);
+    await deleteTestimonialInFirestore(id);
+    if (target) {
+      setFeedbackMessage(`Testimoni dari ${target.customerName} telah dihapus.`);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-[#0F2744]">
       <Navbar
@@ -457,6 +511,7 @@ export default function App() {
               adminUsername={firebaseUser?.email || 'admin'}
               listings={adminListings}
               messages={adminMessages}
+              testimonials={adminTestimonials}
               villages={CISAGA_VILLAGES}
               onCreateListing={handleAdminCreate}
               onUpdateListing={handleAdminUpdate}
@@ -467,6 +522,9 @@ export default function App() {
               onUpdateMessageStatus={handleUpdateMessageStatus}
               onDeleteMessage={handleDeleteMessage}
               onRefreshMessages={handleRefreshMessages}
+              onCreateTestimonial={handleCreateTestimonial}
+              onToggleTestimonialPublish={handleToggleTestimonialPublish}
+              onDeleteTestimonial={handleDeleteTestimonial}
               onLogout={handleAdminLogout}
             />
           ) : (
@@ -526,6 +584,18 @@ export default function App() {
             />
 
             <AboutCisagaHubSection />
+
+            <TestimonialsSection
+              testimonials={publicTestimonials}
+              onSelectUmkmById={(umkmId) => {
+                const matched = publicListings.find((item) => item.id === umkmId);
+                if (matched) {
+                  setSelectedListing(matched);
+                } else {
+                  handleNavigatePublic('#katalog');
+                }
+              }}
+            />
 
             <PartnerRegistrationSection
               villages={CISAGA_VILLAGES}

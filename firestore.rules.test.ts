@@ -22,10 +22,12 @@ test('firestore.rules covers every collection declared in firebase-blueprint.jso
   assert.ok(blueprint.firestore['/contacts/{contactId}']);
   assert.ok(blueprint.firestore['/umkm_listings/{listingId}']);
   assert.ok(blueprint.firestore['/admins/{userId}']);
+  assert.ok(blueprint.firestore['/testimonials/{testimonialId}']);
 
   assert.match(rulesSource, /match \/contacts\/\{contactId\}/);
   assert.match(rulesSource, /match \/umkm_listings\/\{listingId\}/);
   assert.match(rulesSource, /match \/admins\/\{userId\}/);
+  assert.match(rulesSource, /match \/testimonials\/\{testimonialId\}/);
 });
 
 test('firestore.rules enforces Dirty Dozen security invariants on contacts and umkm_listings', () => {
@@ -53,4 +55,14 @@ test('firestore.rules enforces Dirty Dozen security invariants on contacts and u
   assert.match(rulesSource, /request\.auth\.token\.email == 'herzz@smkn2banjar-jabar\.sch\.id'/);
   assert.match(rulesSource, /function isAdmin\(\) \{\s*return isBootstrappedAdmin\(\);\s*\}/);
   assert.match(rulesSource, /match \/admins\/\{userId\} \{\s*allow read, write: if false;\s*\}/);
+
+  // 7. Testimonials public list restricted to isPublished == true and admin-only writes
+  assert.match(
+    rulesSource,
+    /allow list:\s*if resource\.data\.isPublished == true \|\| isBootstrappedAdmin\(\);/
+  );
+  assert.match(
+    rulesSource,
+    /allow create:\s*if isAdmin\(\) &&[\s\S]*isValidTestimonialCreate\(incoming\(\), testimonialId\);/
+  );
 });

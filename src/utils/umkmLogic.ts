@@ -5,6 +5,8 @@ import type {
   ContactMessage,
   ContactMessageFormData,
   ContactTopic,
+  CustomerTestimonial,
+  CustomerTestimonialFormData,
   FreeRegistrationFormData,
   ProductCategory,
   PromoInquiryFormData,
@@ -719,3 +721,54 @@ export function getMonthlyUmkmRegistrationTrend(
 
   return series;
 }
+
+export function validateTestimonialForm(
+  form: CustomerTestimonialFormData
+): Partial<Record<keyof CustomerTestimonialFormData, string>> {
+  const errors: Partial<Record<keyof CustomerTestimonialFormData, string>> = {};
+  const customerName = form.customerName.trim();
+  const customerRole = form.customerRole.trim();
+  const umkmId = form.umkmId.trim();
+  const quote = form.quote.trim();
+  const rating = Number(form.rating);
+
+  if (customerName.length < 2 || customerName.length > 80) {
+    errors.customerName = 'Nama pembeli harus 2–80 karakter.';
+  }
+  if (customerRole.length < 2 || customerRole.length > 80) {
+    errors.customerRole = 'Keterangan atau asal pembeli harus 2–80 karakter.';
+  }
+  if (!/^[a-zA-Z0-9_-]{2,80}$/.test(umkmId)) {
+    errors.umkmId = 'Pilih salah satu UMKM yang terdaftar.';
+  }
+  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+    errors.rating = 'Pilih rating antara 1 hingga 5 bintang.';
+  }
+  if (quote.length < 10 || quote.length > 600) {
+    errors.quote = 'Isi ulasan testimoni minimal 10 karakter (maksimal 600 karakter).';
+  }
+
+  return errors;
+}
+
+export interface TestimonialStats {
+  total: number;
+  publishedCount: number;
+  averageRating: number;
+}
+
+export function getTestimonialStats(testimonials: CustomerTestimonial[]): TestimonialStats {
+  const published = testimonials.filter((item) => item.isPublished);
+  const count = published.length;
+  const averageRating =
+    count > 0
+      ? Math.round((published.reduce((sum, item) => sum + item.rating, 0) / count) * 10) / 10
+      : 0;
+
+  return {
+    total: testimonials.length,
+    publishedCount: count,
+    averageRating,
+  };
+}
+

@@ -14,12 +14,14 @@ import {
   getListingAllImages,
   getMonthlyUmkmRegistrationTrend,
   getPremiumTopListings,
+  getTestimonialStats,
   isDeveloperAdminPath,
   toggleListingTier,
   updateAdminListingEntry,
   validateAdminUmkmForm,
   validateContactMessageForm,
   validateFreeRegistrationForm,
+  validateTestimonialForm,
 } from './umkmLogic';
 
 test('getPremiumTopListings returns only active premium listings and featured sort places premium first', () => {
@@ -433,5 +435,77 @@ test('getMonthlyUmkmRegistrationTrend aggregates monthly registrations continuou
   assert.equal(emptyTrend.length, 6);
   assert.ok(emptyTrend.every((p) => p.total === 0));
 });
+
+test('validateTestimonialForm and getTestimonialStats validate inputs and compute published rating average', () => {
+  const invalid = validateTestimonialForm({
+    customerName: 'A',
+    customerRole: '',
+    umkmId: '',
+    productPurchased: '',
+    rating: 0,
+    quote: 'Pendek',
+    isPublished: true,
+  });
+  assert.ok(invalid.customerName);
+  assert.ok(invalid.customerRole);
+  assert.ok(invalid.umkmId);
+  assert.ok(invalid.rating);
+  assert.ok(invalid.quote);
+
+  const valid = validateTestimonialForm({
+    customerName: 'Rizky Pratama',
+    customerRole: 'Pembeli · Ciamis',
+    umkmId: 'gula-aren-bangunharja',
+    productPurchased: 'Gula Aren Semut 500g',
+    rating: 5,
+    quote: 'Kualitas gula aren sangat baik, aromanya harum dan pengemasannya rapi.',
+    isPublished: true,
+  });
+  assert.deepEqual(valid, {});
+
+  const stats = getTestimonialStats([
+    {
+      id: 't1',
+      customerName: 'Budi',
+      customerRole: 'Pembeli',
+      umkmId: 'gula-aren-bangunharja',
+      umkmName: 'KUB Nira Lestari',
+      productPurchased: 'Gula Semut',
+      rating: 5,
+      quote: 'Produk sangat memuaskan dan pengiriman cepat.',
+      isPublished: true,
+      createdAt: '2026-11-20',
+    },
+    {
+      id: 't2',
+      customerName: 'Ani',
+      customerRole: 'Reseller',
+      umkmId: 'batik-ciamis-mekarmukti',
+      umkmName: 'Batik Galuh Mekar',
+      productPurchased: 'Kain Batik',
+      rating: 4,
+      quote: 'Motif batiknya halus dan sangat diminati pelanggan kami.',
+      isPublished: true,
+      createdAt: '2026-11-22',
+    },
+    {
+      id: 't3',
+      customerName: 'Hidden Draft',
+      customerRole: 'Draft',
+      umkmId: 'sale-pisang-wangunjaya',
+      umkmName: 'Dapur Ibu Enok',
+      productPurchased: 'Sale Pisang',
+      rating: 1,
+      quote: 'Ulasan draft belum dipublikasikan ke halaman utama.',
+      isPublished: false,
+      createdAt: '2026-11-23',
+    },
+  ]);
+
+  assert.equal(stats.total, 3);
+  assert.equal(stats.publishedCount, 2);
+  assert.equal(stats.averageRating, 4.5);
+});
+
 
 

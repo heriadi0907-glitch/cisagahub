@@ -142,3 +142,26 @@ export interface ContactMessage {
   created_at: string;
 }
 
+export interface CustomerTestimonial {
+  id: string;
+  customerName: string;
+  customerRole: string;
+  umkmId: string;
+  umkmName: string;
+  productPurchased: string;
+  rating: number;
+  quote: string;
+  isPublished: boolean;
+  createdAt: string;
+}
+
+export interface CustomerTestimonialFormData {
+  customerName: string;
+  customerRole: string;
+  umkmId: string;
+  productPurchased: string;
+  rating: number;
+  quote: string;
+  isPublished: boolean;
+}
+

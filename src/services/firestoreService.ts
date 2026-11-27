@@ -18,6 +18,7 @@ import {
 } from 'firebase/firestore';
 import {
   CISAGA_VILLAGES,
+  INITIAL_TESTIMONIALS,
   INITIAL_UMKM_LISTINGS,
   UMKM_IMAGE_PRESETS,
 } from '../data/cisagaData';
@@ -28,13 +29,15 @@ import type {
   ContactMessage,
   ContactMessageFormData,
   ContactMessageStatus,
+  CustomerTestimonial,
+  CustomerTestimonialFormData,
   FreeRegistrationFormData,
   ProductVariant,
   UmkmListing,
   UmkmStatus,
   UmkmTier,
 } from '../types/umkm';
-import { validateContactMessageForm } from '../utils/umkmLogic';
+import { validateContactMessageForm, validateTestimonialForm } from '../utils/umkmLogic';
 
 export const BOOTSTRAPPED_ADMIN_EMAIL = 'herzz@smkn2banjar-jabar.sch.id';
 
@@ -617,3 +620,158 @@ export async function deleteListingInFirestore(id: string): Promise<void> {
     handleFirestoreError(error, OperationType.DELETE, docPath);
   }
 }
+
+function mapDocToTestimonial(id: string, data: DocumentData): CustomerTestimonial {
+  const rawRating = Number(data.rating);
+  const clampedRating = Number.isFinite(rawRating)
+    ? Math.min(5, Math.max(1, Math.round(rawRating)))
+    : 5;
+
+  return {
+    id: typeof data.id === 'string' ? data.id : id,
+    customerName: String(data.customerName ?? ''),
+    customerRole: String(data.customerRole ?? 'Pelanggan UMKM'),
+    umkmId: String(data.umkmId ?? ''),
+    umkmName: String(data.umkmName ?? ''),
+    productPurchased: String(data.productPurchased ?? ''),
+    rating: clampedRating,
+    quote: String(data.quote ?? ''),
+    isPublished: Boolean(data.isPublished),
+    createdAt: String(data.createdAt ?? new Date().toISOString().slice(0, 10)),
+  };
+}
+
+export function subscribePublicTestimonials(
+  onData: (testimonials: CustomerTestimonial[]) => void
+): Unsubscribe {
+  const q = query(collection(db, 'testimonials'), where('isPublished', '==', true));
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      if (snapshot.empty) {
+        onData(INITIAL_TESTIMONIALS.filter((t) => t.isPublished));
+        return;
+      }
+      const items = snapshot.docs
+        .map((d) => mapDocToTestimonial(d.id, d.data()))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      onData(items);
+    },
+    (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'testimonials');
+    }
+  );
+}
+
+export async function seedInitialTestimonialsIfEmpty(): Promise<void> {
+  try {
+    const existingSnap = await getDocs(collection(db, 'testimonials'));
+    if (!existingSnap.empty) return;
+
+    const batch = writeBatch(db);
+    for (const item of INITIAL_TESTIMONIALS) {
+      batch.set(doc(db, 'testimonials', item.id), {
+        ...item,
+        serverCreatedAt: serverTimestamp(),
+      });
+    }
+    await batch.commit();
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, 'testimonials');
+  }
+}
+
+export function subscribeAllTestimonialsAdmin(
+  onData: (testimonials: CustomerTestimonial[]) => void
+): Unsubscribe {
+  return onSnapshot(
+    collection(db, 'testimonials'),
+    (snapshot) => {
+      const items = snapshot.docs
+        .map((d) => mapDocToTestimonial(d.id, d.data()))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      onData(items);
+    },
+    (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'testimonials');
+    }
+  );
+}
+
+export async function createTestimonialInFirestore(
+  raw: CustomerTestimonialFormData,
+  listings: UmkmListing[]
+): Promise<CustomerTestimonial> {
+  const sanitized: CustomerTestimonialFormData = {
+    customerName: sanitizeClientText(raw.customerName, false).slice(0, 80),
+    customerRole: (sanitizeClientText(raw.customerRole, false) || 'Pembeli Produk UMKM').slice(
+      0,
+      80
+    ),
+    umkmId: sanitizeClientText(raw.umkmId, false).slice(0, 80),
+    productPurchased: sanitizeClientText(raw.productPurchased, false).slice(0, 120),
+    rating: Math.min(5, Math.max(1, Math.round(Number(raw.rating) || 5))),
+    quote: sanitizeClientText(raw.quote, true).slice(0, 600),
+    isPublished: Boolean(raw.isPublished),
+  };
+
+  const validationErrors = validateTestimonialForm(sanitized);
+  const firstError = Object.values(validationErrors).find(Boolean);
+  if (firstError) {
+    throw new Error(firstError);
+  }
+
+  const matchedUmkm = listings.find((l) => l.id === sanitized.umkmId);
+  if (!matchedUmkm) {
+    throw new Error('Pilih UMKM terdaftar yang valid terlebih dahulu.');
+  }
+
+  const id = `testi-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const createdAt = new Date().toISOString().slice(0, 10);
+  const testimonial: CustomerTestimonial = {
+    id,
+    customerName: sanitized.customerName,
+    customerRole: sanitized.customerRole,
+    umkmId: matchedUmkm.id,
+    umkmName: sanitizeClientText(matchedUmkm.businessName, false).slice(0, 100),
+    productPurchased: sanitized.productPurchased,
+    rating: sanitized.rating,
+    quote: sanitized.quote,
+    isPublished: sanitized.isPublished,
+    createdAt,
+  };
+
+  const docPath = `testimonials/${id}`;
+  try {
+    await setDoc(doc(db, 'testimonials', id), {
+      ...testimonial,
+      serverCreatedAt: serverTimestamp(),
+    });
+    return testimonial;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, docPath);
+  }
+}
+
+export async function toggleTestimonialPublishInFirestore(
+  existing: CustomerTestimonial
+): Promise<boolean> {
+  const nextPublished = !existing.isPublished;
+  const docPath = `testimonials/${existing.id}`;
+  try {
+    await updateDoc(doc(db, 'testimonials', existing.id), { isPublished: nextPublished });
+    return nextPublished;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, docPath);
+  }
+}
+
+export async function deleteTestimonialInFirestore(id: string): Promise<void> {
+  const docPath = `testimonials/${id}`;
+  try {
+    await deleteDoc(doc(db, 'testimonials', id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, docPath);
+  }
+}
+

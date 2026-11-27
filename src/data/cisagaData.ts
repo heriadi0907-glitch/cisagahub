@@ -1,4 +1,4 @@
-import type { UmkmListing, VillageInfo } from '../types/umkm';
+import type { CustomerTestimonial, UmkmListing, VillageInfo } from '../types/umkm';
 
 export interface ImagePreset {
   label: string;
@@ -266,3 +266,46 @@ export const INITIAL_UMKM_LISTINGS: UmkmListing[] = [
     ],
   },
 ];
+
+export const INITIAL_TESTIMONIALS: CustomerTestimonial[] = [
+  {
+    id: 'testi-nira-lestari-1',
+    customerName: 'Rizky Pratama',
+    customerRole: 'Pemilik Kedai Kopi · Ciamis',
+    umkmId: 'gula-aren-bangunharja',
+    umkmName: 'KUB Nira Lestari',
+    productPurchased: 'Toples Semut 500g',
+    rating: 5,
+    quote:
+      'Gula aren semut dari Bangunharja ini larut sempurna untuk menu kopi susu di kedai kami. Aromanya wangi alami tanpa campuran pemanis tambahan.',
+    isPublished: true,
+    createdAt: '2026-10-18',
+  },
+  {
+    id: 'testi-batik-mekar-2',
+    customerName: 'Hj. Dewi Anggraeni',
+    customerRole: 'Koordinator Acara Instansi · Banjar',
+    umkmId: 'batik-ciamis-mekarmukti',
+    umkmName: 'Batik Galuh Mekar',
+    productPurchased: 'Kain Batik Cap Motif Rereng Sukun',
+    rating: 5,
+    quote:
+      'Kami memesan 35 lembar batik seragam acara kantor. Kain katunnya adem, motif rereng sukun rapi, dan pengiriman tepat waktu sesuai jadwal.',
+    isPublished: true,
+    createdAt: '2026-10-25',
+  },
+  {
+    id: 'testi-ibu-enok-3',
+    customerName: 'Siti Nurjanah',
+    customerRole: 'Pelanggan Oleh-Oleh · Tasikmalaya',
+    umkmId: 'sale-pisang-wangunjaya',
+    umkmName: 'Dapur Ibu Enok',
+    productPurchased: 'Sale Pisang Asap Renyah 450g',
+    rating: 5,
+    quote:
+      'Sale pisangnya renyah di luar tapi tetap lembut manis legit di dalam. Kemasannya aman dikirim ke luar kota dan langsung jadi favorit keluarga.',
+    isPublished: true,
+    createdAt: '2026-11-03',
+  },
+];
+
