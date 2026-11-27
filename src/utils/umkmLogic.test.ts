@@ -1,0 +1,437 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { INITIAL_UMKM_LISTINGS } from '../data/cisagaData';
+import {
+  buildWhatsAppUrl,
+  createAdminListingEntry,
+  createFreeListingEntry,
+  cycleListingStatus,
+  deleteListingById,
+  filterAdminListings,
+  filterAndSortListings,
+  formatRupiah,
+  getAdminPortalSummary,
+  getListingAllImages,
+  getMonthlyUmkmRegistrationTrend,
+  getPremiumTopListings,
+  isDeveloperAdminPath,
+  toggleListingTier,
+  updateAdminListingEntry,
+  validateAdminUmkmForm,
+  validateContactMessageForm,
+  validateFreeRegistrationForm,
+} from './umkmLogic';
+
+test('getPremiumTopListings returns only active premium listings and featured sort places premium first', () => {
+  const premium = getPremiumTopListings(INITIAL_UMKM_LISTINGS);
+  assert.equal(premium.length, 3);
+  assert.ok(premium.every((item) => item.tier === 'premium' && item.status === 'Aktif'));
+
+  const sortedAll = filterAndSortListings(INITIAL_UMKM_LISTINGS, {
+    category: 'Semua',
+    tierFilter: 'all',
+    village: 'Semua Desa',
+    query: '',
+    sortBy: 'featured',
+  });
+  assert.equal(sortedAll[0].tier, 'premium');
+  assert.equal(sortedAll[2].tier, 'premium');
+  assert.equal(sortedAll[3].tier, 'reguler');
+});
+
+test('admin tier toggle, status toggle, and delete update listings accurately', () => {
+  const saleItem = INITIAL_UMKM_LISTINGS.find((i) => i.id === 'sale-pisang-wangunjaya')!;
+  assert.equal(saleItem.tier, 'reguler');
+
+  // Upgrade reguler to premium -> now appears in getPremiumTopListings
+  const upgraded = toggleListingTier(INITIAL_UMKM_LISTINGS, saleItem.id);
+  assert.equal(getPremiumTopListings(upgraded).length, 4);
+
+  // Deactivate an active item -> excluded from public active premium list
+  const deactivated = cycleListingStatus(upgraded, saleItem.id);
+  assert.equal(getPremiumTopListings(deactivated).length, 3);
+
+  // Delete removes item completely
+  const afterDelete = deleteListingById(deactivated, saleItem.id);
+  assert.equal(afterDelete.length, INITIAL_UMKM_LISTINGS.length - 1);
+});
+
+test('admin and free registration forms validate inputs and create proper tier entries', () => {
+  const invalidAdmin = validateAdminUmkmForm({
+    businessName: '',
+    ownerName: 'A',
+    productName: 'K',
+    category: 'Kuliner',
+    village: '',
+    whatsapp: '123',
+    tier: 'premium',
+    status: 'Aktif',
+    price: '500',
+    unitLabel: '',
+    shortDescription: 'Pendek',
+    image: '',
+  });
+  assert.ok(invalidAdmin.businessName);
+  assert.ok(invalidAdmin.village);
+  assert.ok(invalidAdmin.whatsapp);
+  assert.ok(invalidAdmin.price);
+  assert.ok(invalidAdmin.shortDescription);
+
+  const createdAdmin = createAdminListingEntry({
+    businessName: 'Opak Ketan Cisaga',
+    ownerName: 'H. Rahmat',
+    productName: 'Opak Bakar Khas Cisaga',
+    category: 'Kuliner',
+    village: 'Desa Cisaga',
+    whatsapp: '081322445566',
+    tier: 'premium',
+    status: 'Aktif',
+    price: '25000',
+    unitLabel: 'Bungkus 250g',
+    shortDescription: 'Opak ketan gurih dibakar di atas bara arang kelapa tradisional.',
+    image: '',
+  });
+  assert.equal(createdAdmin.tier, 'premium');
+  assert.equal(createdAdmin.status, 'Aktif');
+  assert.equal(createdAdmin.price, 25000);
+
+  const invalidFree = validateFreeRegistrationForm({
+    businessName: 'AB',
+    ownerName: 'C',
+    village: '',
+    category: 'Kuliner',
+    whatsapp: '081',
+    signatureProduct: 'Ku',
+    estimatedPrice: '100',
+  });
+  assert.ok(invalidFree.businessName);
+  assert.ok(invalidFree.estimatedPrice);
+
+  const createdFree = createFreeListingEntry({
+    businessName: 'Kerupuk Melarat Cisaga',
+    ownerName: 'Ibu Nani',
+    village: 'Desa Wangunjaya',
+    category: 'Kuliner',
+    whatsapp: '085211334455',
+    signatureProduct: 'Kerupuk Pasir Warna',
+    estimatedPrice: '15000',
+  });
+  assert.equal(createdFree.tier, 'reguler');
+  assert.equal(createdFree.status, 'Menunggu Verifikasi');
+});
+
+test('admin menu/service items and uploaded gallery photos are preserved and searchable', () => {
+  const created = createAdminListingEntry({
+    businessName: 'Warung Liwet Cisaga',
+    ownerName: 'Teh Sari',
+    productName: 'Aneka Masakan Sunda & Catering',
+    category: 'Kuliner',
+    village: 'Desa Cisaga',
+    whatsapp: '081234567890',
+    tier: 'premium',
+    status: 'Aktif',
+    price: '22000',
+    unitLabel: 'Paket Liwet Pribadi',
+    shortDescription: 'Sajian liwet kastrol autentik dengan pilihan lauk dan paket prasmanan.',
+    image: '/uploads/umkm-12345-abcdef.jpg',
+    galleryImages: [
+      '/uploads/umkm-12345-gallery1.png',
+      'javascript:alert(1)', // unsafe URL must be ignored
+    ],
+    variants: [
+      {
+        label: 'Paket Nasi Liwet Ayam Bakar',
+        price: '28000',
+        availabilityNote: 'Tersedia Harian',
+        image: '/uploads/umkm-12345-menu1.webp',
+      },
+      {
+        label: 'Layanan Catering Rapat 20 Porsi',
+        price: '450000',
+        availabilityNote: 'Pre-order 1 Hari',
+      },
+    ],
+  });
+
+  assert.equal(created.image, '/uploads/umkm-12345-abcdef.jpg');
+  assert.deepEqual(created.galleryImages, ['/uploads/umkm-12345-gallery1.png']);
+  assert.equal(created.variants.length, 2);
+  assert.equal(created.variants[1].label, 'Layanan Catering Rapat 20 Porsi');
+  assert.equal(created.variants[1].price, 450000);
+
+  const allPhotos = getListingAllImages(created);
+  assert.deepEqual(allPhotos, [
+    '/uploads/umkm-12345-abcdef.jpg',
+    '/uploads/umkm-12345-gallery1.png',
+    '/uploads/umkm-12345-menu1.webp',
+  ]);
+
+  // Search by menu/service name finds the listing
+  const searchMatch = filterAndSortListings([created], {
+    category: 'Semua',
+    tierFilter: 'all',
+    village: 'Semua Desa',
+    query: 'Catering Rapat',
+    sortBy: 'featured',
+  });
+  assert.equal(searchMatch.length, 1);
+
+  // Updating listing preserves edited menu items
+  const updated = updateAdminListingEntry(created, {
+    businessName: created.businessName,
+    ownerName: created.ownerName,
+    productName: created.productName,
+    category: created.category,
+    village: created.village,
+    whatsapp: created.whatsapp,
+    tier: created.tier,
+    status: created.status,
+    price: '30000',
+    unitLabel: 'Paket Nasi Liwet Ayam Bakar',
+    shortDescription: created.shortDescription,
+    image: created.image,
+    galleryImages: [],
+    variants: [
+      { label: 'Paket Nasi Liwet Ayam Bakar', price: '30000', availabilityNote: 'Siap Antar' },
+      { label: 'Jasa Nasi Box Syukuran', price: '25000', availabilityNote: 'Minimal 10 Box' },
+      { label: 'Sambal Dadak Botolan', price: '18000', availabilityNote: 'Ready Stok' },
+    ],
+  });
+  assert.equal(updated.variants.length, 3);
+  assert.equal(updated.variants[2].label, 'Sambal Dadak Botolan');
+});
+
+test('formatRupiah and buildWhatsAppUrl format cleanly', () => {
+  assert.equal(formatRupiah(165000), 'Rp165.000');
+  assert.equal(
+    buildWhatsAppUrl('0812-3456-7890', 'Tes'),
+    'https://wa.me/6281234567890?text=Tes'
+  );
+  assert.equal(
+    buildWhatsAppUrl('81234567890', 'Halo'),
+    'https://wa.me/6281234567890?text=Halo'
+  );
+});
+
+test('validateContactMessageForm validates name, email, optional whatsapp, subject, and message length', () => {
+  const invalid = validateContactMessageForm({
+    name: 'A',
+    email: 'bukan-email',
+    whatsapp: '123',
+    subject: 'X',
+    message: 'A',
+  });
+  assert.ok(invalid.name);
+  assert.ok(invalid.email);
+  assert.ok(invalid.whatsapp);
+  assert.ok(invalid.subject);
+  assert.ok(invalid.message);
+
+  const missingEmail = validateContactMessageForm({
+    name: 'Dede',
+    email: '',
+    whatsapp: '081234567890',
+    subject: 'Pertanyaan Umum',
+    message: 'Tes',
+  });
+  assert.ok(missingEmail.email);
+
+  const validEmailOnly = validateContactMessageForm({
+    name: 'Siti Rahma',
+    email: 'siti@contoh.id',
+    whatsapp: '',
+    subject: 'Permintaan Kemitraan Produk',
+    message: 'Halo admin',
+  });
+  assert.deepEqual(validEmailOnly, {});
+
+  const validWithOptionalWhatsapp = validateContactMessageForm({
+    name: 'Dede Kurniawan',
+    email: 'dede@contoh.id',
+    whatsapp: '81234567890',
+    subject: 'Promosi UMKM Premium',
+    message: 'Tes pesan singkat',
+  });
+  assert.deepEqual(validWithOptionalWhatsapp, {});
+});
+
+test('isDeveloperAdminPath grants admin view entry only on dedicated developer paths', () => {
+  assert.equal(isDeveloperAdminPath('/'), false);
+  assert.equal(isDeveloperAdminPath('/katalog'), false);
+  assert.equal(isDeveloperAdminPath('/admin'), true);
+  assert.equal(isDeveloperAdminPath('/admin/'), true);
+  assert.equal(isDeveloperAdminPath('/portal-developer'), true);
+});
+
+test('getAdminPortalSummary calculates active UMKM, unread messages, and premium UMKM counts', () => {
+  const pendingFree = createFreeListingEntry({
+    businessName: 'Basreng Teh Ani',
+    ownerName: 'Teh Ani',
+    village: 'Desa Cisaga',
+    category: 'Kuliner',
+    whatsapp: '081211112222',
+    signatureProduct: 'Basreng Pedas Daun Jeruk',
+    estimatedPrice: '15000',
+  });
+  const inactivePremium = createAdminListingEntry({
+    businessName: 'Batik Nonaktif',
+    ownerName: 'Pak Dedi',
+    productName: 'Kain Batik',
+    category: 'Busana',
+    village: 'Desa Mekarmukti',
+    whatsapp: '081333334444',
+    tier: 'premium',
+    status: 'Nonaktif',
+    price: '120000',
+    unitLabel: 'Lembar',
+    shortDescription: 'Batik tulis motif khas Cisaga untuk contoh status nonaktif.',
+    image: '',
+  });
+  const sampleListings = [...INITIAL_UMKM_LISTINGS, pendingFree, inactivePremium];
+  const sampleMessages = [
+    {
+      id: 'm1',
+      name: 'Budi',
+      email: 'budi@contoh.id',
+      whatsapp: '081200000001',
+      subject: 'Tanya Promo',
+      message: 'Halo admin',
+      status: 'unread' as const,
+      created_at: '2026-11-26T00:00:00.000Z',
+    },
+    {
+      id: 'm2',
+      name: 'Sari',
+      email: 'sari@contoh.id',
+      whatsapp: '',
+      subject: 'Kemitraan',
+      message: 'Ingin bergabung',
+      status: 'unread' as const,
+      created_at: '2026-11-26T00:05:00.000Z',
+    },
+    {
+      id: 'm3',
+      name: 'Rudi',
+      email: 'rudi@contoh.id',
+      whatsapp: '',
+      subject: 'Sudah Dibaca',
+      message: 'Terima kasih',
+      status: 'read' as const,
+      created_at: '2026-11-25T10:00:00.000Z',
+    },
+  ];
+
+  const summary = getAdminPortalSummary(sampleListings, sampleMessages);
+  const expectedActive = INITIAL_UMKM_LISTINGS.filter((item) => item.status === 'Aktif').length;
+  const expectedPremium =
+    INITIAL_UMKM_LISTINGS.filter((item) => item.tier === 'premium').length + 1;
+
+  assert.equal(summary.activeUmkmCount, expectedActive);
+  assert.equal(summary.unreadMessagesCount, 2);
+  assert.equal(summary.premiumUmkmCount, expectedPremium);
+});
+
+test('filterAdminListings performs real-time live search prioritizing businessName matches across tabs', () => {
+  const customA = createAdminListingEntry({
+    businessName: 'Saung Madu Cisaga',
+    ownerName: 'Kang Asep',
+    productName: 'Madu Hutan Murni',
+    category: 'Agribisnis',
+    village: 'Desa Danasari',
+    whatsapp: '081277778888',
+    tier: 'premium',
+    status: 'Aktif',
+    price: '75000',
+    unitLabel: 'Botol 500ml',
+    shortDescription: 'Madu hutan alami dari peternakan lebah Kecamatan Cisaga.',
+    image: '',
+  });
+  const customB = createAdminListingEntry({
+    businessName: 'Keripik Mak Enah',
+    ownerName: 'Bu Enah',
+    productName: 'Keripik Pisang Madu',
+    category: 'Kuliner',
+    village: 'Desa Cisaga',
+    whatsapp: '081299990000',
+    tier: 'reguler',
+    status: 'Aktif',
+    price: '18000',
+    unitLabel: 'Pouch 200g',
+    shortDescription: 'Keripik pisang renyah dengan baluran madu manis alami.',
+    image: '',
+  });
+
+  const combined = [customB, customA];
+
+  // Live typing 'saung' matches businessName immediately
+  const byBusinessPrefix = filterAdminListings(combined, 'all', 'sau');
+  assert.equal(byBusinessPrefix.length, 1);
+  assert.equal(byBusinessPrefix[0].businessName, 'Saung Madu Cisaga');
+
+  // Typing 'madu' matches both, ranking businessName match ('Saung Madu Cisaga') ahead of productName match
+  const rankedByBusinessName = filterAdminListings(combined, 'all', 'madu');
+  assert.equal(rankedByBusinessName.length, 2);
+  assert.equal(rankedByBusinessName[0].businessName, 'Saung Madu Cisaga');
+
+  // Combining filterTab with live search query
+  const regulerOnly = filterAdminListings(combined, 'reguler', 'madu');
+  assert.equal(regulerOnly.length, 1);
+  assert.equal(regulerOnly[0].businessName, 'Keripik Mak Enah');
+});
+
+test('getMonthlyUmkmRegistrationTrend aggregates monthly registrations continuously with tier counts', () => {
+  const fixedNow = new Date('2026-11-26T00:00:00.000Z');
+  const novEntry = {
+    ...createAdminListingEntry({
+      businessName: 'Kedai Kopi Baru',
+      ownerName: 'Kang Dedi',
+      productName: 'Kopi Tubruk Cisaga',
+      category: 'Kuliner',
+      village: 'Desa Cisaga',
+      whatsapp: '081255556666',
+      tier: 'premium',
+      status: 'Aktif',
+      price: '20000',
+      unitLabel: 'Gelas',
+      shortDescription: 'Kedai kopi lokal dengan sajian kopi robusta khas Kecamatan Cisaga.',
+      image: '',
+    }),
+    createdAt: '2026-11-18',
+  };
+
+  const trend = getMonthlyUmkmRegistrationTrend([...INITIAL_UMKM_LISTINGS, novEntry], fixedNow);
+  assert.equal(trend.length, 6);
+  assert.equal(trend[0].monthKey, '2026-06');
+  assert.equal(trend[trend.length - 1].monthKey, '2026-11');
+
+  const sep = trend.find((p) => p.monthKey === '2026-09');
+  const okt = trend.find((p) => p.monthKey === '2026-10');
+  const nov = trend.find((p) => p.monthKey === '2026-11');
+  assert.deepEqual(sep, {
+    monthKey: '2026-09',
+    monthLabel: 'Sep 2026',
+    total: 3,
+    premium: 3,
+    reguler: 0,
+  });
+  assert.deepEqual(okt, {
+    monthKey: '2026-10',
+    monthLabel: 'Okt 2026',
+    total: 3,
+    premium: 0,
+    reguler: 3,
+  });
+  assert.deepEqual(nov, {
+    monthKey: '2026-11',
+    monthLabel: 'Nov 2026',
+    total: 1,
+    premium: 1,
+    reguler: 0,
+  });
+
+  const emptyTrend = getMonthlyUmkmRegistrationTrend([], fixedNow);
+  assert.equal(emptyTrend.length, 6);
+  assert.ok(emptyTrend.every((p) => p.total === 0));
+});
+
+
