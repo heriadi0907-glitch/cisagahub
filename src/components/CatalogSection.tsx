@@ -175,11 +175,11 @@ export function CatalogSection({
       : undefined;
 
   return (
-    <section id="katalog" className="scroll-mt-16 py-14 sm:py-20 bg-[#F8FAFC]">
+    <section id="katalog" className="scroll-mt-14 py-7 sm:py-9 bg-[#F8FAFC]">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 mb-5">
           <div>
-            <p className="text-xs font-semibold text-[#C2410C] mb-2">
+            <p className="text-xs font-semibold text-[#C2410C] mb-1">
               Katalog Produk &amp; Kategori UMKM · CISAGA HUB
             </p>
             <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0F2744] tracking-tight">
@@ -193,13 +193,13 @@ export function CatalogSection({
         </div>
 
         {/* Interactive Filter & Instant Search Bar */}
-        <div className="pb-6 mb-8 border-b border-[#E2E8F0] space-y-3">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-3">
+        <div className="pb-4 mb-5 border-b border-[#E2E8F0] space-y-2.5">
+          <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-2.5">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
               <div
                 role="tablist"
                 aria-label="Filter kategori produk"
-                className="flex flex-wrap items-center gap-1.5 p-1 bg-[#F1F5F9] rounded-lg w-fit border border-[#E2E8F0]"
+                className="flex flex-wrap items-center gap-1 p-1 bg-[#F1F5F9] rounded-lg w-fit border border-[#E2E8F0]"
               >
                 {CATEGORIES.map((category) => {
                   const isActive = selectedCategory === category;
@@ -210,7 +210,7 @@ export function CatalogSection({
                       role="tab"
                       aria-selected={isActive}
                       onClick={() => onSelectCategory(category)}
-                      className={`px-3.5 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-150 whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F2744] ${
+                      className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-150 whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F2744] ${
                         isActive
                           ? 'bg-[#0F2744] text-white shadow-xs'
                           : 'text-[#475569] hover:text-[#0F2744]'
@@ -222,7 +222,7 @@ export function CatalogSection({
                 })}
               </div>
 
-              <div>
+              <div className="shrink-0">
                 <label htmlFor="catalog-tier-filter" className="sr-only">
                   Filter paket promosi
                 </label>
@@ -230,7 +230,7 @@ export function CatalogSection({
                   id="catalog-tier-filter"
                   value={tierFilter}
                   onChange={(e) => onSelectTierFilter(e.target.value as 'all' | UmkmTier)}
-                  className="pl-3 pr-8 py-2 text-xs sm:text-sm bg-white border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744] cursor-pointer"
+                  className="pl-2.5 pr-7 py-1.5 text-xs sm:text-sm bg-white border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744] cursor-pointer"
                 >
                   <option value="all">Paket: Semua</option>
                   <option value="premium">Paket: Premium</option>
@@ -239,13 +239,13 @@ export function CatalogSection({
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
               {selectedVillage !== 'Semua Desa' && (
                 <button
                   type="button"
                   onClick={onResetVillage}
                   aria-label={`Hapus filter desa ${selectedVillage}`}
-                  className="inline-flex items-center justify-between gap-2 px-3 py-2 text-xs font-medium bg-[#0F2744]/10 text-[#0F2744] hover:bg-[#0F2744]/15 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                  className="inline-flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs font-medium bg-[#0F2744]/10 text-[#0F2744] hover:bg-[#0F2744]/15 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <span>Filter: {selectedVillage}</span>
                   <X className="w-3.5 h-3.5" aria-hidden="true" />
@@ -255,7 +255,7 @@ export function CatalogSection({
               <div
                 ref={searchWrapperRef}
                 data-testid="catalog-instant-search-wrapper"
-                className="relative flex-1 sm:w-72"
+                className="relative flex-1 lg:w-60 xl:w-64"
               >
                 <label htmlFor="catalog-search" className="sr-only">
                   Cari produk, nama usaha, menu, atau desa
@@ -282,7 +282,7 @@ export function CatalogSection({
                   }}
                   onKeyDown={handleSearchInputKeyDown}
                   placeholder="Cari produk, usaha, menu, desa..."
-                  className="w-full pl-9 pr-9 py-2 text-sm bg-white border border-[#E2E8F0] rounded-lg text-[#0F2744] placeholder:text-[#475569]/70 focus:outline-none focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
+                  className="w-full pl-9 pr-8 py-1.5 text-xs sm:text-sm bg-white border border-[#E2E8F0] rounded-lg text-[#0F2744] placeholder:text-[#475569]/70 focus:outline-none focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
                 />
                 {searchQuery.length > 0 && (
                   <button
@@ -481,7 +481,7 @@ export function CatalogSection({
                 )}
               </div>
 
-              <div>
+              <div className="shrink-0">
                 <label htmlFor="catalog-sort" className="sr-only">
                   Urutkan etalase
                 </label>
@@ -489,7 +489,7 @@ export function CatalogSection({
                   id="catalog-sort"
                   value={sortBy}
                   onChange={(e) => onSortChange(e.target.value as SortOption)}
-                  className="w-full sm:w-auto pl-3 pr-8 py-2 text-sm bg-white border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744] cursor-pointer"
+                  className="w-full sm:w-auto pl-2.5 pr-7 py-1.5 text-xs sm:text-sm bg-white border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744] cursor-pointer"
                 >
                   <option value="featured">Urutan: Premium Teratas</option>
                   <option value="price-asc">Kisaran: Terendah</option>
@@ -539,34 +539,55 @@ export function CatalogSection({
 
         {/* Product Showcase Grid or Empty State */}
         {listings.length === 0 ? (
-          <div className="bg-white border border-[#E2E8F0] rounded-xl p-10 text-center max-w-lg mx-auto">
-            <h3 className="font-display text-lg font-semibold text-[#0F2744] mb-2">
-              Etalase tidak ditemukan
-            </h3>
-            <p className="text-sm text-[#475569] mb-6">
-              {trimmedQuery !== ''
-                ? `Tidak ada UMKM atau produk Cisaga yang cocok dengan kata kunci "${trimmedQuery}".`
-                : 'Tidak ada UMKM atau produk Cisaga yang cocok dengan filter yang sedang aktif.'}
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-2.5">
-              {trimmedQuery !== '' && hasActiveScopeFilters && (
+          totalActiveCount === 0 ? (
+            <div
+              data-testid="catalog-empty-state"
+              className="bg-white border border-[#E2E8F0] rounded-xl p-6 text-center max-w-lg mx-auto"
+            >
+              <h3 className="font-display text-lg font-semibold text-[#0F2744] mb-1.5">
+                Belum ada UMKM terdaftar
+              </h3>
+              <p className="text-sm text-[#475569] mb-4">
+                Daftar etalase UMKM Kecamatan Cisaga saat ini masih kosong. Pelaku usaha dapat
+                mendaftar gratis atau admin dapat menambahkan UMKM melalui Portal Admin.
+              </p>
+              <a
+                href="#daftar-mitra"
+                className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-[#EA580C] hover:bg-[#C2410C] rounded-lg transition-colors"
+              >
+                Daftarkan UMKM Free
+              </a>
+            </div>
+          ) : (
+            <div className="bg-white border border-[#E2E8F0] rounded-xl p-6 text-center max-w-lg mx-auto">
+              <h3 className="font-display text-lg font-semibold text-[#0F2744] mb-1.5">
+                Etalase tidak ditemukan
+              </h3>
+              <p className="text-sm text-[#475569] mb-4">
+                {trimmedQuery !== ''
+                  ? `Tidak ada UMKM atau produk Cisaga yang cocok dengan kata kunci "${trimmedQuery}".`
+                  : 'Tidak ada UMKM atau produk Cisaga yang cocok dengan filter yang sedang aktif.'}
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-2.5">
+                {trimmedQuery !== '' && hasActiveScopeFilters && (
+                  <button
+                    type="button"
+                    onClick={handleExpandSearchScope}
+                    className="px-4 py-2 text-sm font-medium text-[#0F2744] bg-[#F1F5F9] hover:bg-[#E2E8F0] rounded-lg transition-colors cursor-pointer"
+                  >
+                    Cari di Semua Kategori
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={handleExpandSearchScope}
-                  className="px-4 py-2 text-sm font-medium text-[#0F2744] bg-[#F1F5F9] hover:bg-[#E2E8F0] rounded-lg transition-colors cursor-pointer"
+                  onClick={onResetAll}
+                  className="px-4 py-2 text-sm font-medium text-white bg-[#0F2744] hover:bg-[#0B1E36] rounded-lg transition-colors cursor-pointer"
                 >
-                  Cari di Semua Kategori
+                  Reset Filter
                 </button>
-              )}
-              <button
-                type="button"
-                onClick={onResetAll}
-                className="px-4 py-2 text-sm font-medium text-white bg-[#0F2744] hover:bg-[#0B1E36] rounded-lg transition-colors cursor-pointer"
-              >
-                Reset Filter
-              </button>
+              </div>
             </div>
-          </div>
+          )
         ) : (
           <div
             data-testid="product-grid"

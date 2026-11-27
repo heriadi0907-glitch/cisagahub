@@ -1,8 +1,8 @@
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
-const MAX_DIMENSION = 1280;
+const MAX_DIMENSION = 1080;
 const FIRESTORE_MAX_DIMENSION = 800;
 const TARGET_MAX_RAW_BYTES = 1_500_000;
-const MAX_FIRESTORE_DATA_URL_LENGTH = 220_000;
+const MAX_FIRESTORE_DATA_URL_LENGTH = 135_000;
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -23,13 +23,13 @@ function resizeImageDataUrlIfNeeded(
   dataUrl: string,
   mimeType: string,
   maxDimension = MAX_DIMENSION,
-  quality = 0.86
+  quality = 0.84
 ): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
       const { naturalWidth, naturalHeight } = img;
-      if (naturalWidth <= maxDimension && naturalHeight <= maxDimension && quality >= 0.86) {
+      if (naturalWidth <= maxDimension && naturalHeight <= maxDimension && quality >= 0.84) {
         resolve(dataUrl);
         return;
       }
@@ -75,13 +75,13 @@ export async function prepareFirestoreImageDataUrl(file: File): Promise<string> 
     return prepared;
   }
 
-  const medium = await resizeImageDataUrlIfNeeded(prepared, 'image/jpeg', FIRESTORE_MAX_DIMENSION, 0.76);
+  const medium = await resizeImageDataUrlIfNeeded(prepared, 'image/jpeg', FIRESTORE_MAX_DIMENSION, 0.75);
   if (medium.length <= MAX_FIRESTORE_DATA_URL_LENGTH) {
     return medium;
   }
 
   const compact = await resizeImageDataUrlIfNeeded(prepared, 'image/jpeg', 600, 0.62);
-  if (compact.length > 255_000) {
+  if (compact.length > 250_000) {
     throw new Error('Ukuran foto setelah kompresi terlalu besar. Gunakan foto lain yang lebih ringan.');
   }
   return compact;

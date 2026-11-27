@@ -1,7 +1,7 @@
 import { ArrowRight, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import type { UmkmListing, VillageInfo } from '../types/umkm';
-import { buildWhatsAppUrl } from '../utils/umkmLogic';
+import { buildUmkmAutoChatMessage, buildWhatsAppUrl } from '../utils/umkmLogic';
 
 interface VillageExplorerSectionProps {
   villages: VillageInfo[];
@@ -26,15 +26,15 @@ export function VillageExplorerSection({
   return (
     <section
       id="sebaran-desa"
-      className="scroll-mt-16 py-14 sm:py-20 bg-white border-y border-[#E2E8F0]"
+      className="scroll-mt-14 py-7 sm:py-9 bg-white border-y border-[#E2E8F0]"
     >
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
-        <div className="max-w-2xl mb-10">
-          <p className="text-xs font-semibold text-[#C2410C] mb-2">
-            Direktori UMKM · {villages.length} Desa di Kecamatan Cisaga
+        <div className="max-w-2xl mb-5">
+          <p className="text-xs font-semibold text-[#C2410C] mb-1">
+            Direktori UMKM · {villages.length} Desa di Kecamatan Cisaga, Kab. Ciamis, Jawa Barat
           </p>
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0F2744] tracking-tight mb-3">
-            Direktori Usaha Lokal Setiap Desa di Cisaga
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0F2744] tracking-tight mb-2">
+            Direktori Usaha Lokal Setiap Desa di Kecamatan Cisaga, Kabupaten Ciamis, Jawa Barat
           </h2>
           <p className="text-sm sm:text-base text-[#475569] leading-relaxed">
             Pilih salah satu dari {villages.length} desa di Kecamatan Cisaga untuk melihat potensi
@@ -43,11 +43,11 @@ export function VillageExplorerSection({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
           <div
             role="tablist"
             aria-label="Daftar desa di Kecamatan Cisaga"
-            className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-2.5"
+            className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-2"
           >
             {villages.map((village, idx) => {
               const isSelected = village.name === activeVillage.name;
@@ -62,7 +62,7 @@ export function VillageExplorerSection({
                   role="tab"
                   aria-selected={isSelected}
                   onClick={() => setSelectedVillageName(village.name)}
-                  className={`w-full text-left p-3.5 rounded-xl border transition-all duration-150 cursor-pointer flex items-center justify-between gap-3 ${
+                  className={`w-full text-left p-2.5 sm:p-3 rounded-xl border transition-all duration-150 cursor-pointer flex items-center justify-between gap-3 ${
                     idx === 0 ? 'sm:col-span-2' : ''
                   } ${
                     isSelected
@@ -92,16 +92,16 @@ export function VillageExplorerSection({
             })}
           </div>
 
-          <div className="lg:col-span-6 lg:sticky lg:top-20 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-6 sm:p-8">
-            <div className="flex flex-wrap items-center justify-between gap-4 pb-5 mb-6 border-b border-[#E2E8F0]">
+          <div className="lg:col-span-6 lg:sticky lg:top-16 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4 sm:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3.5 mb-4 border-b border-[#E2E8F0]">
               <div>
-                <div className="flex items-center gap-1.5 text-xs text-[#475569] mb-1">
+                <div className="flex items-center gap-1.5 text-xs text-[#475569] mb-0.5">
                   <MapPin className="w-3.5 h-3.5 text-[#EA580C]" aria-hidden="true" />
-                  <span>Kecamatan Cisaga, Kabupaten Ciamis</span>
+                  <span>Kecamatan Cisaga, Kabupaten Ciamis, Jawa Barat</span>
                   <span aria-hidden="true">·</span>
                   <span className="font-mono tabular-nums">{activeVillage.coordinatesLabel}</span>
                 </div>
-                <h3 className="font-display text-2xl font-bold text-[#0F2744]">
+                <h3 className="font-display text-xl sm:text-2xl font-bold text-[#0F2744]">
                   {activeVillage.name}
                 </h3>
               </div>
@@ -109,24 +109,24 @@ export function VillageExplorerSection({
               <button
                 type="button"
                 onClick={() => onFilterByVillage(activeVillage.name)}
-                className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-[#0F2744] hover:bg-[#0B1E36] rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                className="inline-flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white bg-[#0F2744] hover:bg-[#0B1E36] rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <span>Lihat Etalase {activeVillage.name}</span>
                 <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 
-            <p className="text-sm sm:text-base text-[#475569] leading-relaxed mb-6">
+            <p className="text-sm text-[#475569] leading-relaxed mb-4">
               {activeVillage.description}
             </p>
 
             <div>
-              <h4 className="text-xs font-semibold text-[#0F2744] mb-3">
+              <h4 className="text-xs font-semibold text-[#0F2744] mb-2.5">
                 UMKM Terdaftar di {activeVillage.name} ({villageListings.length})
               </h4>
 
               {villageListings.length === 0 ? (
-                <p className="text-sm text-[#475569] py-4 border-t border-[#E2E8F0]">
+                <p className="text-sm text-[#475569] py-3 border-t border-[#E2E8F0]">
                   Belum ada UMKM aktif atau terdaftar untuk desa ini.
                 </p>
               ) : (
@@ -134,7 +134,7 @@ export function VillageExplorerSection({
                   {villageListings.map((item) => (
                     <div
                       key={item.id}
-                      className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                      className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
                     >
                       <div>
                         <p className="text-sm font-semibold text-[#0F2744]">
@@ -158,7 +158,7 @@ export function VillageExplorerSection({
                         <a
                           href={buildWhatsAppUrl(
                             item.whatsapp,
-                            `Halo ${item.businessName}, saya menemukan usaha Anda di platform CISAGA HUB Kecamatan Cisaga.`
+                            buildUmkmAutoChatMessage(item)
                           )}
                           target="_blank"
                           rel="noopener noreferrer"

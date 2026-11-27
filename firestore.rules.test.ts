@@ -66,4 +66,11 @@ test('firestore.rules enforces Dirty Dozen security invariants on contacts and u
     rulesSource,
     /allow create:\s*if isAdmin\(\) &&[\s\S]*isValidTestimonialCreate\(incoming\(\), testimonialId\);/
   );
+
+  // 8. Optional whatsappAutoMessage & safe https/http socialLinks map validated on umkm_listings
+  assert.match(rulesSource, /'whatsappAutoMessage'/);
+  assert.match(rulesSource, /'socialLinks'/);
+  assert.match(rulesSource, /function isValidSocialLinksMap\(links\)/);
+  assert.match(rulesSource, /\^https\?:\/\/\[\^\\\\s<>\]\+\$/);
 });
+

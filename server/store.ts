@@ -2,11 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {
-  CISAGA_VILLAGES,
-  INITIAL_UMKM_LISTINGS,
-  UMKM_IMAGE_PRESETS,
-} from '../src/data/cisagaData.ts';
+import { CISAGA_VILLAGES, UMKM_IMAGE_PRESETS } from '../src/data/cisagaData.ts';
 import type {
   AdminUmkmFormData,
   BusinessCategory,
@@ -20,6 +16,7 @@ import type {
   UmkmStatus,
   UmkmTier,
 } from '../src/types/umkm.ts';
+import { isSafeUmkmImagePath, validateAdminSocialLinks } from '../src/utils/umkmLogic.ts';
 import {
   constantTimeEqual,
   hashPassword,
@@ -120,15 +117,21 @@ function getDefaultImageForCategory(category: BusinessCategory): string {
 
 function isAllowedImageUrl(url: string): boolean {
   const trimmed = url.trim();
-  return ALLOWED_IMAGE_URLS.has(trimmed) || UPLOAD_URL_PATH_REGEX.test(trimmed);
+  return (
+    ALLOWED_IMAGE_URLS.has(trimmed) ||
+    UPLOAD_URL_PATH_REGEX.test(trimmed) ||
+    (/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(trimmed) &&
+      trimmed.length <= 260_000)
+  );
 }
 
-function resolveSafeImage(imageInput: string | undefined, category: BusinessCategory): string {
+function resolveSafeImage(imageInput: string | undefined): string {
   const trimmed = (imageInput ?? '').trim();
+  if (trimmed === '') return '';
   if (isAllowedImageUrl(trimmed)) {
     return trimmed;
   }
-  return getDefaultImageForCategory(category);
+  return '';
 }
 
 function resolveSafeOptionalImage(imageInput: unknown): string | undefined {
@@ -194,8 +197,11 @@ export function resolveWritableDataDir(
   return preferredDir;
 }
 
-export function createServerStore(dataDirInput = path.resolve(process.cwd(), '.data')) {
-  const dataDir = resolveWritableDataDir(dataDirInput);
+export function createServerStore(
+  dataDirInput = path.resolve(process.cwd(), '.data'),
+  fallbackDir?: string
+) {
+  const dataDir = resolveWritableDataDir(dataDirInput, fallbackDir);
   const listingsPath = path.join(dataDir, 'umkm-listings.json');
   const authPath = path.join(dataDir, 'admin-auth.json');
   const contactsPath = path.join(dataDir, 'contacts.json');
@@ -261,10 +267,10 @@ export function createServerStore(dataDirInput = path.resolve(process.cwd(), '.d
       // Fall back to memory or seed data if file is missing or unreadable
     }
     if (memoryListings) return memoryListings;
-    const seeded = [...INITIAL_UMKM_LISTINGS];
-    memoryListings = seeded;
-    writeJsonAtomic(listingsPath, seeded);
-    return seeded;
+    const emptyListings: UmkmListing[] = [];
+    memoryListings = emptyListings;
+    writeJsonAtomic(listingsPath, emptyListings);
+    return emptyListings;
   };
 
   const writeListings = (listings: UmkmListing[]) => {
@@ -564,7 +570,17 @@ export function createServerStore(dataDirInput = path.resolve(process.cwd(), '.d
       throw new StoreHttpError(400, 'Deskripsi singkat minimal 10 karakter.');
     }
 
-    const safePrimaryImage = resolveSafeImage(raw.image, category);
+    const whatsappAutoMessage = sanitizeTextInput(raw.whatsappAutoMessage ?? '', true).slice(
+      0,
+      500
+    );
+    const socialValidation = validateAdminSocialLinks(raw.socialLinks);
+    const firstSocialError = Object.values(socialValidation.errors).find(Boolean);
+    if (firstSocialError) {
+      throw new StoreHttpError(400, firstSocialError);
+    }
+
+    const safePrimaryImage = resolveSafeImage(raw.image);
     const safeGalleryImages = resolveSafeGalleryImages(raw.galleryImages, safePrimaryImage);
 
     let parsedVariants: Array<{
@@ -618,6 +634,8 @@ export function createServerStore(dataDirInput = path.resolve(process.cwd(), '.d
       tier,
       status,
       whatsapp: whatsapp.replace(/[^0-9]/g, ''),
+      whatsappAutoMessage,
+      socialLinks: socialValidation.links,
       price: Math.round(parsedPrice),
       unitLabel,
       shortDescription,
@@ -656,6 +674,8 @@ export function createServerStore(dataDirInput = path.resolve(process.cwd(), '.d
       category: valid.category,
       village: valid.village,
       whatsapp: valid.whatsapp,
+      ...(valid.whatsappAutoMessage ? { whatsappAutoMessage: valid.whatsappAutoMessage } : {}),
+      ...(Object.keys(valid.socialLinks).length > 0 ? { socialLinks: valid.socialLinks } : {}),
       tier: valid.tier,
       status: valid.status,
       price: variants[0]?.price ?? valid.price,
@@ -702,6 +722,8 @@ export function createServerStore(dataDirInput = path.resolve(process.cwd(), '.d
       category: valid.category,
       village: valid.village,
       whatsapp: valid.whatsapp,
+      whatsappAutoMessage: valid.whatsappAutoMessage,
+      socialLinks: valid.socialLinks,
       tier: valid.tier,
       status: valid.status,
       price: variants[0]?.price ?? valid.price,

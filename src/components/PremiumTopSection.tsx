@@ -1,6 +1,7 @@
 import { Bookmark, Check, Crown, Eye, MessageCircle } from 'lucide-react';
 import type { SavedPromoItem, UmkmListing } from '../types/umkm';
 import {
+  buildUmkmAutoChatMessage,
   buildWhatsAppUrl,
   formatRupiah,
   getStartingPrice,
@@ -25,12 +26,12 @@ export function PremiumTopSection({
     <section
       id="umkm-premium"
       data-testid="premium-top-section"
-      className="scroll-mt-16 py-12 sm:py-16 bg-[#F8FAFC] border-b border-[#E2E8F0]"
+      className="scroll-mt-14 py-7 sm:py-9 bg-[#F8FAFC] border-b border-[#E2E8F0]"
     >
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 mb-5">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#C2410C] mb-2">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#C2410C] mb-1">
               <Crown className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Promosi UMKM · Mitra Premium Posisi Teratas</span>
             </div>
@@ -45,20 +46,20 @@ export function PremiumTopSection({
         </div>
 
         {premiumListings.length === 0 ? (
-          <div className="bg-white border border-[#E2E8F0] rounded-xl p-8 text-center">
+          <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 text-center">
             <p className="text-sm text-[#475569]">
               Belum ada UMKM berstatus Premium aktif saat ini. Admin dapat menambahkan atau
               menaikkan status usaha ke Premium melalui Panel Admin.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {premiumListings.map((listing) => {
               const startingPrice = getStartingPrice(listing);
               const saved = isListingSaved(savedItems, listing.id);
               const waUrl = buildWhatsAppUrl(
                 listing.whatsapp,
-                `Halo ${listing.businessName}, saya melihat promosi Premium "${listing.productName}" di bagian teratas CISAGA HUB Kecamatan Cisaga.`
+                buildUmkmAutoChatMessage(listing)
               );
 
               return (

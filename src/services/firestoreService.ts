@@ -18,8 +18,8 @@ import {
 } from 'firebase/firestore';
 import {
   CISAGA_VILLAGES,
-  INITIAL_TESTIMONIALS,
-  INITIAL_UMKM_LISTINGS,
+  LEGACY_SEEDED_TESTIMONIAL_IDS,
+  LEGACY_SEEDED_UMKM_IDS,
   UMKM_IMAGE_PRESETS,
 } from '../data/cisagaData';
 import { db, handleFirestoreError, OperationType } from '../firebase';
@@ -34,11 +34,14 @@ import type {
   FreeRegistrationFormData,
   ProductVariant,
   UmkmListing,
+  UmkmSocialLinks,
   UmkmStatus,
   UmkmTier,
 } from '../types/umkm';
 import {
   isAuthorizedAdminEmail,
+  isSafeUmkmImagePath,
+  validateAdminSocialLinks,
   validateContactMessageForm,
   validateTestimonialForm,
 } from '../utils/umkmLogic';
@@ -94,22 +97,16 @@ function getDefaultImageForCategory(category: BusinessCategory): string {
 function isAllowedImageValue(url: string): boolean {
   const trimmed = url.trim();
   if (ALLOWED_IMAGE_PRESETS.has(trimmed)) return true;
-  if (/^\/uploads\/umkm-[a-zA-Z0-9._-]+\.(?:jpg|jpeg|png|webp)$/.test(trimmed)) return true;
-  if (
-    /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(trimmed) &&
-    trimmed.length <= 260_000
-  ) {
-    return true;
-  }
-  return false;
+  return isSafeUmkmImagePath(trimmed);
 }
 
-function resolveSafeImage(imageInput: string | undefined, category: BusinessCategory): string {
+function resolveSafeImage(imageInput: string | undefined): string {
   const trimmed = (imageInput ?? '').trim();
+  if (trimmed === '') return '';
   if (isAllowedImageValue(trimmed)) {
     return trimmed;
   }
-  return getDefaultImageForCategory(category);
+  return '';
 }
 
 function resolveSafeOptionalImage(imageInput: unknown): string | undefined {
@@ -156,6 +153,15 @@ function mapDocToListing(id: string, data: DocumentData): UmkmListing {
     ...(typeof v?.image === 'string' && v.image.trim() ? { image: v.image } : {}),
   }));
 
+  const whatsappAutoMessage =
+    typeof data.whatsappAutoMessage === 'string' && data.whatsappAutoMessage.trim()
+      ? data.whatsappAutoMessage.trim().slice(0, 500)
+      : undefined;
+  const parsedSocialLinks =
+    data.socialLinks && typeof data.socialLinks === 'object'
+      ? validateAdminSocialLinks(data.socialLinks as UmkmSocialLinks).links
+      : {};
+
   return {
     id: typeof data.id === 'string' ? data.id : id,
     businessName: String(data.businessName ?? ''),
@@ -166,6 +172,8 @@ function mapDocToListing(id: string, data: DocumentData): UmkmListing {
       : 'Kuliner',
     village: String(data.village ?? ''),
     whatsapp: String(data.whatsapp ?? ''),
+    ...(whatsappAutoMessage ? { whatsappAutoMessage } : {}),
+    ...(Object.keys(parsedSocialLinks).length > 0 ? { socialLinks: parsedSocialLinks } : {}),
     tier: VALID_TIERS.has(data.tier as UmkmTier) ? (data.tier as UmkmTier) : 'reguler',
     status: VALID_STATUSES.has(data.status as UmkmStatus)
       ? (data.status as UmkmStatus)
@@ -174,7 +182,7 @@ function mapDocToListing(id: string, data: DocumentData): UmkmListing {
     unitLabel: String(data.unitLabel ?? 'Kemasan Standar'),
     shortDescription: String(data.shortDescription ?? ''),
     fullDescription: String(data.fullDescription ?? ''),
-    image: String(data.image ?? getDefaultImageForCategory('Kuliner')),
+    image: typeof data.image === 'string' ? data.image : '',
     galleryImages: Array.isArray(data.galleryImages)
       ? data.galleryImages.filter((u): u is string => typeof u === 'string')
       : [],
@@ -219,18 +227,19 @@ export async function isAuthorizedAdminUser(user: User | null): Promise<boolean>
   return isAuthorizedAdminEmail(user?.email, Boolean(user?.emailVerified));
 }
 
-const LEGACY_SEED_IDS = new Set([
-  'gula-aren-bangunharja',
-  'batik-ciamis-mekarmukti',
-  'hampers-karya-cisaga',
-  'sale-pisang-wangunjaya',
-  'anyaman-bambu-tanjungjaya',
-  'kopi-kepel-cisaga',
-]);
-const VERIFIED_GMAPS_LISTINGS = INITIAL_UMKM_LISTINGS.filter(
-  (item) => item.id.startsWith('gmaps-') && item.status === 'Aktif'
-);
-const GMAPS_SEED_MARKER_KEY = 'cisaga_gmaps_seeded_v1';
+const LEGACY_UMKM_ID_SET = new Set(LEGACY_SEEDED_UMKM_IDS);
+const LEGACY_TESTIMONIAL_ID_SET = new Set(LEGACY_SEEDED_TESTIMONIAL_IDS);
+
+async function deleteDocIdsInChunks(collectionName: string, ids: string[]): Promise<void> {
+  const CHUNK_SIZE = 400;
+  for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
+    const batch = writeBatch(db);
+    for (const id of ids.slice(i, i + CHUNK_SIZE)) {
+      batch.delete(doc(db, collectionName, id));
+    }
+    await batch.commit();
+  }
+}
 
 export function subscribePublicActiveListings(
   onData: (listings: UmkmListing[]) => void
@@ -240,17 +249,12 @@ export function subscribePublicActiveListings(
     q,
     (snapshot) => {
       if (snapshot.empty) {
-        onData(INITIAL_UMKM_LISTINGS.filter((item) => item.status === 'Aktif'));
+        onData([]);
         return;
       }
-      const items = snapshot.docs.map((d) => mapDocToListing(d.id, d.data()));
-      const hasAnyGmapsDoc = items.some((item) => item.id.startsWith('gmaps-'));
-      const onlyLegacySeedDocs =
-        items.length <= LEGACY_SEED_IDS.size && items.every((item) => LEGACY_SEED_IDS.has(item.id));
-      if (!hasAnyGmapsDoc && onlyLegacySeedDocs) {
-        onData([...items, ...VERIFIED_GMAPS_LISTINGS]);
-        return;
-      }
+      const items = snapshot.docs
+        .map((d) => mapDocToListing(d.id, d.data()))
+        .filter((item) => !LEGACY_UMKM_ID_SET.has(item.id));
       onData(items);
     },
     (error) => {
@@ -259,57 +263,28 @@ export function subscribePublicActiveListings(
   );
 }
 
-export async function seedInitialListingsIfEmpty(): Promise<void> {
+export async function purgeLegacySeededDataInFirestore(): Promise<void> {
   try {
-    const existingSnap = await getDocs(collection(db, 'umkm_listings'));
-    if (existingSnap.empty) {
-      const batch = writeBatch(db);
-      for (const item of INITIAL_UMKM_LISTINGS) {
-        batch.set(doc(db, 'umkm_listings', item.id), {
-          ...item,
-          galleryImages: item.galleryImages ?? [],
-          serverCreatedAt: serverTimestamp(),
-        });
-      }
-      await batch.commit();
-      try {
-        localStorage.setItem(GMAPS_SEED_MARKER_KEY, 'done');
-      } catch {
-        // Ignore storage quota errors
-      }
-      return;
+    const [umkmSnap, testiSnap] = await Promise.all([
+      getDocs(collection(db, 'umkm_listings')),
+      getDocs(collection(db, 'testimonials')),
+    ]);
+
+    const legacyUmkmIds = umkmSnap.docs
+      .map((d) => d.id)
+      .filter((id) => LEGACY_UMKM_ID_SET.has(id));
+    if (legacyUmkmIds.length > 0) {
+      await deleteDocIdsInChunks('umkm_listings', legacyUmkmIds);
     }
 
-    const existingIds = new Set(existingSnap.docs.map((d) => d.id));
-    const hasAnyGmapsDoc = existingSnap.docs.some((d) => d.id.startsWith('gmaps-'));
-    let alreadySyncedLocally = false;
-    try {
-      alreadySyncedLocally = localStorage.getItem(GMAPS_SEED_MARKER_KEY) === 'done';
-    } catch {
-      alreadySyncedLocally = false;
-    }
-
-    if (!hasAnyGmapsDoc && !alreadySyncedLocally) {
-      const missingGmaps = VERIFIED_GMAPS_LISTINGS.filter((item) => !existingIds.has(item.id));
-      if (missingGmaps.length > 0) {
-        const batch = writeBatch(db);
-        for (const item of missingGmaps) {
-          batch.set(doc(db, 'umkm_listings', item.id), {
-            ...item,
-            galleryImages: item.galleryImages ?? [],
-            serverCreatedAt: serverTimestamp(),
-          });
-        }
-        await batch.commit();
-      }
-      try {
-        localStorage.setItem(GMAPS_SEED_MARKER_KEY, 'done');
-      } catch {
-        // Ignore storage quota errors
-      }
+    const legacyTestiIds = testiSnap.docs
+      .map((d) => d.id)
+      .filter((id) => LEGACY_TESTIMONIAL_ID_SET.has(id));
+    if (legacyTestiIds.length > 0) {
+      await deleteDocIdsInChunks('testimonials', legacyTestiIds);
     }
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, 'umkm_listings');
+    handleFirestoreError(error, OperationType.DELETE, 'umkm_listings');
   }
 }
 
@@ -321,6 +296,7 @@ export function subscribeAllListingsAdmin(
     (snapshot) => {
       const items = snapshot.docs
         .map((d) => mapDocToListing(d.id, d.data()))
+        .filter((item) => !LEGACY_UMKM_ID_SET.has(item.id))
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       onData(items);
     },
@@ -550,7 +526,17 @@ function buildValidatedAdminListingFields(raw: AdminUmkmFormData, baseId: string
     throw new Error('Deskripsi singkat minimal 10 karakter.');
   }
 
-  const safeImage = resolveSafeImage(raw.image, category);
+  const whatsappAutoMessage = sanitizeClientText(raw.whatsappAutoMessage ?? '', true).slice(
+    0,
+    500
+  );
+  const socialValidation = validateAdminSocialLinks(raw.socialLinks);
+  const firstSocialError = Object.values(socialValidation.errors).find(Boolean);
+  if (firstSocialError) {
+    throw new Error(firstSocialError);
+  }
+
+  const safeImage = resolveSafeImage(raw.image);
   const safeGallery = resolveSafeGalleryImages(raw.galleryImages, safeImage);
 
   const rawVariants = Array.isArray(raw.variants) ? raw.variants.slice(0, 25) : [];
@@ -588,13 +574,15 @@ function buildValidatedAdminListingFields(raw: AdminUmkmFormData, baseId: string
           },
         ];
 
-  return {
+  const fields = {
     businessName,
     ownerName,
     productName,
     category,
     village,
     whatsapp: whatsappDigits,
+    whatsappAutoMessage,
+    socialLinks: socialValidation.links,
     tier,
     status,
     price: variants[0]?.price ?? parsedPrice,
@@ -608,6 +596,14 @@ function buildValidatedAdminListingFields(raw: AdminUmkmFormData, baseId: string
     galleryImages: safeGallery,
     variants,
   };
+
+  if (new TextEncoder().encode(JSON.stringify(fields)).length > 920_000) {
+    throw new Error(
+      'Total ukuran foto terlalu besar untuk satu profil UMKM. Kurangi jumlah foto galeri/menu atau gunakan foto yang lebih ringan.'
+    );
+  }
+
+  return fields;
 }
 
 export async function createAdminListingInFirestore(
@@ -677,6 +673,19 @@ export async function deleteListingInFirestore(id: string): Promise<void> {
   }
 }
 
+export async function deleteAllListingsInFirestore(): Promise<number> {
+  try {
+    const snap = await getDocs(collection(db, 'umkm_listings'));
+    const allIds = snap.docs.map((d) => d.id);
+    if (allIds.length > 0) {
+      await deleteDocIdsInChunks('umkm_listings', allIds);
+    }
+    return allIds.length;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, 'umkm_listings');
+  }
+}
+
 function mapDocToTestimonial(id: string, data: DocumentData): CustomerTestimonial {
   const rawRating = Number(data.rating);
   const clampedRating = Number.isFinite(rawRating)
@@ -705,11 +714,12 @@ export function subscribePublicTestimonials(
     q,
     (snapshot) => {
       if (snapshot.empty) {
-        onData(INITIAL_TESTIMONIALS.filter((t) => t.isPublished));
+        onData([]);
         return;
       }
       const items = snapshot.docs
         .map((d) => mapDocToTestimonial(d.id, d.data()))
+        .filter((item) => !LEGACY_TESTIMONIAL_ID_SET.has(item.id))
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       onData(items);
     },
@@ -717,24 +727,6 @@ export function subscribePublicTestimonials(
       handleFirestoreError(error, OperationType.LIST, 'testimonials');
     }
   );
-}
-
-export async function seedInitialTestimonialsIfEmpty(): Promise<void> {
-  try {
-    const existingSnap = await getDocs(collection(db, 'testimonials'));
-    if (!existingSnap.empty) return;
-
-    const batch = writeBatch(db);
-    for (const item of INITIAL_TESTIMONIALS) {
-      batch.set(doc(db, 'testimonials', item.id), {
-        ...item,
-        serverCreatedAt: serverTimestamp(),
-      });
-    }
-    await batch.commit();
-  } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, 'testimonials');
-  }
 }
 
 export function subscribeAllTestimonialsAdmin(
@@ -745,6 +737,7 @@ export function subscribeAllTestimonialsAdmin(
     (snapshot) => {
       const items = snapshot.docs
         .map((d) => mapDocToTestimonial(d.id, d.data()))
+        .filter((item) => !LEGACY_TESTIMONIAL_ID_SET.has(item.id))
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       onData(items);
     },

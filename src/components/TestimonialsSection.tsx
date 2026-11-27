@@ -33,15 +33,15 @@ export function TestimonialsSection({
     <section
       id="testimoni"
       data-testid="testimonials-section"
-      className="scroll-mt-16 py-14 sm:py-20 bg-[#F8FAFC] border-b border-[#E2E8F0]"
+      className="scroll-mt-14 py-7 sm:py-9 bg-[#F8FAFC] border-b border-[#E2E8F0]"
     >
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 space-y-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 space-y-5">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="max-w-[60ch]">
-            <p className="text-xs font-semibold tracking-wide text-[#C2410C] mb-2">
+            <p className="text-xs font-semibold tracking-wide text-[#C2410C] mb-1">
               Testimoni Pelanggan · Social Proof UMKM Cisaga
             </p>
-            <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0F2744] tracking-tight leading-snug mb-2">
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0F2744] tracking-tight leading-snug mb-1.5">
               Apa Kata Pembeli Tentang UMKM Terdaftar
             </h2>
             <p className="text-sm sm:text-base text-[#475569] leading-relaxed">
@@ -50,9 +50,9 @@ export function TestimonialsSection({
             </p>
           </div>
 
-          <div className="bg-white border border-[#E2E8F0] rounded-xl px-5 py-3.5 flex items-center gap-4 shrink-0">
-            <div className="w-10 h-10 rounded-lg bg-[#EA580C]/10 text-[#EA580C] flex items-center justify-center shrink-0">
-              <Star className="w-5 h-5 fill-[#EA580C]" aria-hidden="true" />
+          <div className="bg-white border border-[#E2E8F0] rounded-xl px-4 py-3 flex items-center gap-3.5 shrink-0">
+            <div className="w-9 h-9 rounded-lg bg-[#EA580C]/10 text-[#EA580C] flex items-center justify-center shrink-0">
+              <Star className="w-4 h-4 fill-[#EA580C]" aria-hidden="true" />
             </div>
             <div>
               <p className="font-mono tabular-nums text-xl font-bold text-[#0F2744]">
@@ -68,14 +68,14 @@ export function TestimonialsSection({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {published.map((item) => (
             <article
               key={item.id}
               data-testid={`testimonial-card-${item.id}`}
-              className="bg-white border border-[#E2E8F0] rounded-xl p-6 flex flex-col justify-between gap-5"
+              className="bg-white border border-[#E2E8F0] rounded-xl p-4 sm:p-5 flex flex-col justify-between gap-3.5"
             >
-              <div className="space-y-4">
+              <div className="space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
                   <div
                     className="inline-flex items-center gap-1"
@@ -104,8 +104,8 @@ export function TestimonialsSection({
                 </p>
               </div>
 
-              <div className="space-y-4 pt-3 border-t border-[#E2E8F0]">
-                <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg px-3.5 py-2.5 flex items-center justify-between gap-2">
+              <div className="space-y-3 pt-2.5 border-t border-[#E2E8F0]">
+                <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg px-3 py-2 flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-[11px] font-medium text-[#64748B]">UMKM Diulas</p>
                     <p className="text-xs font-semibold text-[#0F2744] truncate">

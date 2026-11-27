@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Bookmark, Check, MessageCircle, X } from 'lucide-react';
-import type { SavedPromoItem, UmkmListing } from '../types/umkm';
+import { Bookmark, Check, ExternalLink, Globe, MessageCircle, X } from 'lucide-react';
+import type { SavedPromoItem, SocialPlatform, UmkmListing } from '../types/umkm';
 import {
+  buildUmkmAutoChatMessage,
   buildWhatsAppUrl,
   formatRupiah,
   getListingAllImages,
+  hasAnySocialLinks,
   isListingSaved,
+  SOCIAL_LINK_PLATFORMS,
 } from '../utils/umkmLogic';
 import { ProductImage } from './ProductImage';
 
@@ -15,6 +18,13 @@ interface ProductModalProps {
   onClose: () => void;
   onSaveListing: (listing: UmkmListing, variantId: string) => void;
 }
+
+const SOCIAL_LABELS: Record<SocialPlatform, string> = {
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  tiktok: 'TikTok',
+  website: 'Website / Toko',
+};
 
 export function ProductModal({
   listing,
@@ -53,8 +63,9 @@ export function ProductModal({
   const isSaved = isListingSaved(savedItems, listing.id, activeVariantId);
   const displayedImage = activeImageUrl || listing.image;
 
-  const whatsappMessage = `Halo ${listing.businessName}, saya melihat profil dan menu/layanan "${activeLabel}" (${listing.productName}) di platform CISAGA HUB Kecamatan Cisaga. Boleh info ketersediaan dan pemesanannya?`;
+  const whatsappMessage = buildUmkmAutoChatMessage(listing, activeLabel);
   const whatsappUrl = buildWhatsAppUrl(listing.whatsapp, whatsappMessage);
+  const showSocialLinks = hasAnySocialLinks(listing.socialLinks);
 
   return (
     <div
@@ -161,6 +172,37 @@ export function ProductModal({
               {listing.fullDescription}
             </p>
 
+            {showSocialLinks && listing.socialLinks && (
+              <div
+                data-testid="modal-social-links"
+                className="mb-5 pt-3 border-t border-[#E2E8F0]"
+              >
+                <p className="text-xs font-semibold text-[#0F2744] mb-2">
+                  Media Sosial &amp; Tautan Resmi UMKM
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {SOCIAL_LINK_PLATFORMS.map((platform) => {
+                    const url = listing.socialLinks?.[platform];
+                    if (!url) return null;
+                    return (
+                      <a
+                        key={platform}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Buka ${SOCIAL_LABELS[platform]} ${listing.businessName}`}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[#0F2744] bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg transition-colors"
+                      >
+                        <Globe className="w-3.5 h-3.5 text-[#C2410C]" aria-hidden="true" />
+                        <span>{SOCIAL_LABELS[platform]}</span>
+                        <ExternalLink className="w-3 h-3 text-[#64748B]" aria-hidden="true" />
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {listing.variants.length > 0 && (
               <div>
                 <p className="text-xs font-semibold text-[#0F2744] mb-2">
@@ -219,6 +261,7 @@ export function ProductModal({
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
+              data-testid="modal-whatsapp-cta"
               className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-[#EA580C] hover:bg-[#C2410C] rounded-lg transition-colors"
             >
               <MessageCircle className="w-4 h-4" aria-hidden="true" />
@@ -246,3 +289,4 @@ export function ProductModal({
     </div>
   );
 }
+

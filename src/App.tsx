@@ -14,23 +14,19 @@ import { ProductModal } from './components/ProductModal';
 import { SavedPromoDrawer } from './components/SavedPromoDrawer';
 import { TestimonialsSection } from './components/TestimonialsSection';
 import { VillageExplorerSection } from './components/VillageExplorerSection';
-import {
-  CISAGA_VILLAGES,
-  INITIAL_TESTIMONIALS,
-  INITIAL_UMKM_LISTINGS,
-} from './data/cisagaData';
+import { CISAGA_VILLAGES } from './data/cisagaData';
 import { auth, googleProvider } from './firebase';
 import {
   createAdminListingInFirestore,
   createContactMessageInFirestore,
   createFreeRegistrationInFirestore,
   createTestimonialInFirestore,
+  deleteAllListingsInFirestore,
   deleteContactInFirestore,
   deleteListingInFirestore,
   deleteTestimonialInFirestore,
   isAuthorizedAdminUser,
-  seedInitialListingsIfEmpty,
-  seedInitialTestimonialsIfEmpty,
+  purgeLegacySeededDataInFirestore,
   subscribeAllContactsAdmin,
   subscribeAllListingsAdmin,
   subscribeAllTestimonialsAdmin,
@@ -111,13 +107,10 @@ export default function App() {
   const [feedbackHasSavedAction, setFeedbackHasSavedAction] = useState<boolean>(false);
 
   // Firestore-backed UMKM listings & admin inbox messages
-  const [publicListings, setPublicListings] = useState<UmkmListing[]>(
-    INITIAL_UMKM_LISTINGS.filter((item) => item.status === 'Aktif')
-  );
+  const [publicListings, setPublicListings] = useState<UmkmListing[]>([]);
   const [adminListings, setAdminListings] = useState<UmkmListing[]>([]);
   const [adminMessages, setAdminMessages] = useState<ContactMessage[]>([]);
-  const [publicTestimonials, setPublicTestimonials] =
-    useState<CustomerTestimonial[]>(INITIAL_TESTIMONIALS);
+  const [publicTestimonials, setPublicTestimonials] = useState<CustomerTestimonial[]>([]);
   const [adminTestimonials, setAdminTestimonials] = useState<CustomerTestimonial[]>([]);
 
   // Firebase Auth state for Admin Panel
@@ -214,8 +207,7 @@ export default function App() {
   useEffect(() => {
     if (!isAuthReady || !isAuthorizedAdmin) return;
 
-    void seedInitialListingsIfEmpty();
-    void seedInitialTestimonialsIfEmpty();
+    void purgeLegacySeededDataInFirestore();
     const unsubscribeListings = subscribeAllListingsAdmin((listings) => {
       setAdminListings(listings);
     });
@@ -252,11 +244,7 @@ export default function App() {
     [publicListings, selectedCategory, tierFilter, selectedVillage, searchQuery, sortBy]
   );
 
-  const totalDisplayedUmkm = useMemo(() => {
-    const baseSum = CISAGA_VILLAGES.reduce((sum, v) => sum + v.baseUmkmCount, 0);
-    const addedCount = Math.max(0, publicListings.length - INITIAL_UMKM_LISTINGS.length);
-    return baseSum + addedCount;
-  }, [publicListings]);
+  const totalDisplayedUmkm = publicListings.length;
 
   useEffect(() => {
     const handlePopState = () => {
@@ -429,6 +417,16 @@ export default function App() {
     }
   };
 
+  const handleAdminDeleteAll = async () => {
+    const count = await deleteAllListingsInFirestore();
+    setSavedItems([]);
+    setFeedbackMessage(
+      count > 0
+        ? `Semua ${count} data UMKM berhasil dihapus.`
+        : 'Daftar UMKM sudah kosong.'
+    );
+  };
+
   const handleAdminUploadImage = async (file: File): Promise<string> => {
     return prepareFirestoreImageDataUrl(file);
   };
@@ -519,6 +517,7 @@ export default function App() {
               onToggleTier={handleAdminToggleTier}
               onCycleStatus={handleAdminCycleStatus}
               onDeleteListing={handleAdminDelete}
+              onDeleteAllListings={handleAdminDeleteAll}
               onUpdateMessageStatus={handleUpdateMessageStatus}
               onDeleteMessage={handleDeleteMessage}
               onRefreshMessages={handleRefreshMessages}

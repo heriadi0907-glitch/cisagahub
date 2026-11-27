@@ -132,28 +132,28 @@ export function AboutCisagaHubSection() {
   return (
     <section
       id="tentang"
-      className="scroll-mt-16 py-14 sm:py-20 bg-white border-b border-[#E2E8F0]"
+      className="scroll-mt-14 py-7 sm:py-9 bg-white border-b border-[#E2E8F0]"
     >
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 space-y-12">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 space-y-7">
         {/* Header & Logo Showcase + Meaning of Name & Slogan */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center pb-12 border-b border-[#E2E8F0]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center pb-7 border-b border-[#E2E8F0]">
           <div className="lg:col-span-5">
-            <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl p-5 sm:p-6">
-              <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 flex items-center justify-center">
+            <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4">
+              <div className="bg-white rounded-lg border border-[#E2E8F0] p-3 flex items-center justify-center">
                 <img
                   src={CISAGA_HUB_LOGO_PATH}
                   alt="Logo Resmi CISAGA HUB — Dukung UMKM Cisaga, Go Digital Bersama"
-                  className="w-full max-w-[360px] h-auto object-contain"
+                  className="w-full max-w-[280px] h-auto object-contain"
                 />
               </div>
-              <div className="mt-4 pt-4 border-t border-[#E2E8F0] text-center">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#C2410C]">
+              <div className="mt-3 pt-3 border-t border-[#E2E8F0] text-center">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#C2410C]">
                   Filosofi Slogan
                 </p>
-                <p className="font-display text-base sm:text-lg font-bold text-[#0F2744] mt-1">
+                <p className="font-display text-base font-bold text-[#0F2744] mt-0.5">
                   &ldquo;Dukung UMKM Cisaga, Go Digital Bersama.&rdquo;
                 </p>
-                <p className="text-xs text-[#475569] leading-relaxed mt-1.5">
+                <p className="text-xs text-[#475569] leading-relaxed mt-1">
                   Mengajak masyarakat bersama-sama mendukung perkembangan usaha lokal melalui
                   teknologi digital sebagai jembatan antara pelaku usaha dan konsumen.
                 </p>
@@ -161,15 +161,15 @@ export function AboutCisagaHubSection() {
             </div>
           </div>
 
-          <div className="lg:col-span-7 space-y-5">
+          <div className="lg:col-span-7 space-y-3.5">
             <div>
-              <p className="text-xs font-semibold tracking-wide text-[#EA580C] mb-2">
+              <p className="text-xs font-semibold tracking-wide text-[#EA580C] mb-1">
                 Tentang CISAGA HUB · Filosofi &amp; Makna Logo
               </p>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0F2744] tracking-tight leading-snug mb-3">
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0F2744] tracking-tight leading-snug mb-2">
                 Pusat Penghubung Potensi &amp; Pelaku UMKM Kecamatan Cisaga
               </h2>
-              <p className="text-sm sm:text-base text-[#475569] leading-relaxed">
+              <p className="text-sm text-[#475569] leading-relaxed">
                 Cisaga Hub merupakan platform digital yang hadir sebagai pusat informasi, promosi,
                 dan pengembangan Usaha Mikro, Kecil, dan Menengah (UMKM) di Kecamatan Cisaga,
                 Kabupaten Ciamis. Nama Cisaga Hub merepresentasikan semangat untuk menghubungkan
@@ -179,26 +179,26 @@ export function AboutCisagaHubSection() {
             </div>
 
             {/* Makna Nama CISAGA HUB */}
-            <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-5 space-y-3">
-              <h3 className="font-display text-base font-bold text-[#0F2744]">
+            <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4 space-y-2.5">
+              <h3 className="font-display text-sm sm:text-base font-bold text-[#0F2744]">
                 Makna Nama CISAGA HUB
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div className="bg-white border border-[#E2E8F0] rounded-lg p-3.5">
-                  <p className="font-mono text-xs font-bold text-[#0F2744] mb-1">CISAGA</p>
-                  <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-sm">
+                <div className="bg-white border border-[#E2E8F0] rounded-lg p-3">
+                  <p className="font-mono text-xs font-bold text-[#0F2744] mb-0.5">CISAGA</p>
+                  <p className="text-xs text-[#475569] leading-relaxed">
                     Identitas wilayah dan representasi seluruh potensi masyarakat Kecamatan Cisaga.
                   </p>
                 </div>
-                <div className="bg-white border border-[#E2E8F0] rounded-lg p-3.5">
-                  <p className="font-mono text-xs font-bold text-[#C2410C] mb-1">HUB</p>
-                  <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+                <div className="bg-white border border-[#E2E8F0] rounded-lg p-3">
+                  <p className="font-mono text-xs font-bold text-[#C2410C] mb-0.5">HUB</p>
+                  <p className="text-xs text-[#475569] leading-relaxed">
                     Pusat penghubung atau pusat ekosistem yang mempertemukan berbagai pihak dalam
                     satu wadah.
                   </p>
                 </div>
               </div>
-              <p className="text-xs sm:text-sm font-medium text-[#0F2744]">
+              <p className="text-xs font-medium text-[#0F2744]">
                 Makna utuh:{' '}
                 <span className="text-[#475569] font-normal">
                   Pusat penghubung potensi dan pelaku UMKM Kecamatan Cisaga melalui pemanfaatan
@@ -210,38 +210,42 @@ export function AboutCisagaHubSection() {
         </div>
 
         {/* 1. Filosofi 6 Unsur Logo */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="max-w-[68ch]">
-            <p className="text-xs font-semibold text-[#C2410C] mb-1">1. Filosofi Logo</p>
+            <p className="text-xs font-semibold text-[#C2410C] mb-0.5">1. Filosofi Logo</p>
             <h3 className="font-display text-xl sm:text-2xl font-bold text-[#0F2744] tracking-tight">
               Sinergi Potensi Alam, Ekonomi Masyarakat &amp; Teknologi Digital
             </h3>
-            <p className="text-sm text-[#475569] mt-1.5 leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#475569] mt-1 leading-relaxed">
               Logo Cisaga Hub menggabungkan unsur potensi alam, kegiatan ekonomi masyarakat, dan
               teknologi digital sebagai identitas daerah yang terus berkembang.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {LOGO_PHILOSOPHY_ITEMS.map((item) => {
               const Icon = item.icon;
               return (
                 <div
                   key={item.code}
-                  className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-5 space-y-3"
+                  className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4 space-y-2"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div
-                      className={`w-10 h-10 rounded-lg inline-flex items-center justify-center ${item.accentClass}`}
+                      className={`w-8 h-8 rounded-lg inline-flex items-center justify-center ${item.accentClass}`}
                     >
-                      <Icon className="w-5 h-5" aria-hidden="true" />
+                      <Icon className="w-4 h-4" aria-hidden="true" />
                     </div>
                     <span className="font-mono text-xs font-semibold text-[#64748B]">
                       Unsur {item.code}
                     </span>
                   </div>
-                  <h4 className="font-display text-base font-bold text-[#0F2744]">{item.title}</h4>
-                  <p className="text-sm text-[#475569] leading-relaxed">{item.description}</p>
+                  <h4 className="font-display text-sm sm:text-base font-bold text-[#0F2744]">
+                    {item.title}
+                  </h4>
+                  <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+                    {item.description}
+                  </p>
                 </div>
               );
             })}
@@ -249,32 +253,32 @@ export function AboutCisagaHubSection() {
         </div>
 
         {/* 2. Makna Warna + 6. Identitas Utama Brand */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-6 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-6 space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          <div className="lg:col-span-6 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4 sm:p-5 space-y-3">
             <div className="flex items-center gap-2">
               <Palette className="w-4 h-4 text-[#C2410C]" aria-hidden="true" />
               <h3 className="font-display text-lg font-bold text-[#0F2744]">2. Makna Warna</h3>
             </div>
             <div className="divide-y divide-[#E2E8F0] bg-white border border-[#E2E8F0] rounded-lg overflow-hidden">
               {COLOR_MEANINGS.map((color) => (
-                <div key={color.name} className="px-4 py-3 flex items-start gap-3.5">
+                <div key={color.name} className="px-3.5 py-2 flex items-start gap-3">
                   <span
-                    className={`w-5 h-5 rounded-md shrink-0 mt-0.5 ${color.swatchClass}`}
+                    className={`w-4 h-4 rounded-sm shrink-0 mt-0.5 ${color.swatchClass}`}
                     aria-hidden="true"
                   />
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[#0F2744]">{color.name}</p>
-                    <p className="text-xs sm:text-sm text-[#475569]">{color.meaning}</p>
+                    <p className="text-xs sm:text-sm font-semibold text-[#0F2744]">{color.name}</p>
+                    <p className="text-xs text-[#475569]">{color.meaning}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="lg:col-span-6 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-6 space-y-4">
+          <div className="lg:col-span-6 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4 sm:p-5 space-y-3">
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-[#0F2744]" aria-hidden="true" />
-              <h3 className="font-display text-lg font-bold text-[#0F2744]">
+              <h3 className="font-display text-base sm:text-lg font-bold text-[#0F2744]">
                 Identitas Utama Brand
               </h3>
             </div>
@@ -282,12 +286,12 @@ export function AboutCisagaHubSection() {
               {BRAND_IDENTITY_ROWS.map((row) => (
                 <div
                   key={row.label}
-                  className="px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4"
+                  className="px-3.5 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4"
                 >
-                  <span className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">
                     {row.label}
                   </span>
-                  <span className="text-sm font-medium text-[#0F2744] sm:text-right">
+                  <span className="text-xs sm:text-sm font-medium text-[#0F2744] sm:text-right">
                     {row.value}
                   </span>
                 </div>
@@ -297,43 +301,43 @@ export function AboutCisagaHubSection() {
         </div>
 
         {/* 5. Visi & Misi */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-          <div className="lg:col-span-5 bg-[#0F2744] text-white rounded-xl p-6 sm:p-7 flex flex-col justify-between">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          <div className="lg:col-span-5 bg-[#0F2744] text-white rounded-xl p-5 flex flex-col justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#FDBA74] mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#FDBA74] mb-1.5">
                 Visi CISAGA HUB
               </p>
-              <h3 className="font-display text-xl font-bold mb-4 leading-snug">
+              <h3 className="font-display text-lg sm:text-xl font-bold mb-2.5 leading-snug">
                 Ekosistem Digital UMKM Kecamatan Cisaga yang Inovatif &amp; Berkelanjutan
               </h3>
-              <p className="text-sm sm:text-base text-white/90 leading-relaxed">
+              <p className="text-xs sm:text-sm text-white/90 leading-relaxed">
                 Menjadi pusat ekosistem digital UMKM Kecamatan Cisaga yang inovatif, inklusif, dan
                 berkelanjutan dalam mendorong pertumbuhan ekonomi lokal serta memperluas jangkauan
                 pasar produk unggulan daerah.
               </p>
             </div>
-            <p className="text-xs text-[#FDBA74] font-medium pt-6 mt-6 border-t border-white/15">
+            <p className="text-xs text-[#FDBA74] font-medium pt-4 mt-4 border-t border-white/15">
               Dukung UMKM Cisaga, Go Digital Bersama.
             </p>
           </div>
 
-          <div className="lg:col-span-7 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-6 sm:p-7 space-y-4">
+          <div className="lg:col-span-7 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4 sm:p-5 space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wider text-[#C2410C]">
               Misi CISAGA HUB
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {MISSION_ITEMS.map((mission, idx) => (
                 <div
                   key={mission.title}
-                  className={`bg-white border border-[#E2E8F0] rounded-lg p-4 space-y-1.5 ${
+                  className={`bg-white border border-[#E2E8F0] rounded-lg p-3 space-y-1 ${
                     idx === MISSION_ITEMS.length - 1 ? 'sm:col-span-2' : ''
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-[#047857] shrink-0" aria-hidden="true" />
-                    <h4 className="text-sm font-bold text-[#0F2744]">{mission.title}</h4>
+                    <h4 className="text-xs sm:text-sm font-bold text-[#0F2744]">{mission.title}</h4>
                   </div>
-                  <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+                  <p className="text-xs text-[#475569] leading-relaxed">
                     {mission.description}
                   </p>
                 </div>
@@ -343,21 +347,21 @@ export function AboutCisagaHubSection() {
         </div>
 
         {/* Kesimpulan Filosofis */}
-        <div className="bg-[#FFF7ED] border border-[#FDBA74]/60 rounded-xl p-6 sm:p-7 flex flex-col sm:flex-row items-start gap-4">
-          <div className="w-10 h-10 rounded-lg bg-[#EA580C] text-white inline-flex items-center justify-center shrink-0">
-            <Quote className="w-5 h-5" aria-hidden="true" />
+        <div className="bg-[#FFF7ED] border border-[#FDBA74]/60 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row items-start gap-3.5">
+          <div className="w-9 h-9 rounded-lg bg-[#EA580C] text-white inline-flex items-center justify-center shrink-0">
+            <Quote className="w-4 h-4" aria-hidden="true" />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-wider text-[#C2410C]">
               Kesimpulan Filosofis
             </p>
-            <p className="text-sm sm:text-base text-[#0F2744] leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#0F2744] leading-relaxed">
               Cisaga Hub membawa gagasan bahwa setiap potensi lokal memiliki peluang untuk
               berkembang ketika dipertemukan dengan teknologi. Dari hasil pertanian, peternakan,
               hingga produk kuliner masyarakat, semuanya memiliki tempat untuk dikenal,
               dipromosikan, dan berkembang melalui satu ekosistem digital.
             </p>
-            <p className="font-display text-sm sm:text-base font-bold text-[#0F2744]">
+            <p className="font-display text-sm font-bold text-[#0F2744]">
               Cisaga Hub — Menghubungkan Potensi Lokal, Membangun Ekonomi Digital.
             </p>
           </div>

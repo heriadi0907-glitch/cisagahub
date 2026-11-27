@@ -55,6 +55,21 @@ service cloud.firestore {
       ];
     }
 
+    function isValidSocialLinkValue(val) {
+      return val is string &&
+        val.size() <= 200 &&
+        (val == '' || val.matches('^https?://[^\\s<>]+$'));
+    }
+
+    function isValidSocialLinksMap(links) {
+      return links is map &&
+        links.keys().hasOnly(['instagram', 'facebook', 'tiktok', 'website']) &&
+        (!('instagram' in links.keys()) || isValidSocialLinkValue(links.instagram)) &&
+        (!('facebook' in links.keys()) || isValidSocialLinkValue(links.facebook)) &&
+        (!('tiktok' in links.keys()) || isValidSocialLinkValue(links.tiktok)) &&
+        (!('website' in links.keys()) || isValidSocialLinkValue(links.website));
+    }
+
     function isValidContactShape(data, contactId) {
       return data.keys().hasAll([
           'id',
@@ -147,6 +162,8 @@ service cloud.firestore {
           'category',
           'village',
           'whatsapp',
+          'whatsappAutoMessage',
+          'socialLinks',
           'tier',
           'status',
           'price',
@@ -179,6 +196,11 @@ service cloud.firestore {
         data.whatsapp.size() >= 10 &&
         data.whatsapp.size() <= 15 &&
         data.whatsapp.matches('^[0-9]+$') &&
+        (!('whatsappAutoMessage' in data.keys()) || (
+          data.whatsappAutoMessage is string &&
+          data.whatsappAutoMessage.size() <= 500
+        )) &&
+        (!('socialLinks' in data.keys()) || isValidSocialLinksMap(data.socialLinks)) &&
         data.tier in ['premium', 'reguler'] &&
         data.status in ['Aktif', 'Menunggu Verifikasi', 'Nonaktif'] &&
         data.price is number &&
@@ -236,6 +258,8 @@ service cloud.firestore {
             'category',
             'village',
             'whatsapp',
+            'whatsappAutoMessage',
+            'socialLinks',
             'tier',
             'status',
             'price',
@@ -248,7 +272,6 @@ service cloud.firestore {
           ])
         );
     }
-
 
     match /contacts/{contactId} {
       allow get: if isValidId(contactId) && isAdmin();

@@ -7,25 +7,25 @@ interface FooterProps {
 
 export function Footer({ onNavigatePublic, onOpenAdmin }: FooterProps) {
   return (
-    <footer id="kontak" className="bg-white border-t border-[#E2E8F0] py-12">
+    <footer id="kontak" className="bg-white border-t border-[#E2E8F0] py-7">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-8 border-b border-[#E2E8F0]">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pb-5 border-b border-[#E2E8F0]">
           <div className="md:col-span-5">
-            <div className="mb-3">
+            <div className="mb-2">
               <BrandLogo size="md" />
             </div>
-            <p className="text-xs font-semibold text-[#C2410C] mb-2">
+            <p className="text-xs font-semibold text-[#C2410C] mb-1.5">
               Digital UMKM Ecosystem · Dukung UMKM Cisaga, Go Digital Bersama.
             </p>
-            <p className="text-sm text-[#475569] leading-relaxed max-w-[44ch]">
+            <p className="text-xs sm:text-sm text-[#475569] leading-relaxed max-w-[44ch]">
               Pusat penghubung potensi dan pelaku UMKM Kecamatan Cisaga melalui pemanfaatan
               teknologi digital untuk memperluas pasar produk unggulan daerah.
             </p>
           </div>
 
           <div className="md:col-span-3">
-            <p className="text-xs font-semibold text-[#0F2744] mb-3">Navigasi Ekosistem</p>
-            <ul className="space-y-2 text-sm text-[#475569]">
+            <p className="text-xs font-semibold text-[#0F2744] mb-2">Navigasi Ekosistem</p>
+            <ul className="space-y-1.5 text-xs sm:text-sm text-[#475569]">
               <li>
                 <a
                   href="#tentang"
@@ -123,22 +123,22 @@ export function Footer({ onNavigatePublic, onOpenAdmin }: FooterProps) {
           </div>
 
           <div className="md:col-span-4">
-            <p className="text-xs font-semibold text-[#0F2744] mb-3">
+            <p className="text-xs font-semibold text-[#0F2744] mb-2">
               Kontak &amp; Informasi Sekretariat
             </p>
-            <p className="text-sm text-[#475569] leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
               Jl. Raya Cisaga No. 48, Desa Cisaga, Kec. Cisaga, Kab. Ciamis, Jawa Barat 46386
             </p>
-            <p className="text-sm text-[#475569] mt-2 font-mono tabular-nums">
+            <p className="text-xs sm:text-sm text-[#475569] mt-1.5 font-mono tabular-nums">
               Senin – Sabtu · 08.00 – 16.30 WIB
             </p>
-            <p className="text-sm text-[#0F2744] font-medium mt-2">
+            <p className="text-xs sm:text-sm text-[#0F2744] font-medium mt-1.5">
               Email: sekretariat@cisagahub.id
             </p>
           </div>
         </div>
 
-        <div className="pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-[#475569]">
+        <div className="pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-[#475569]">
           <p>© {new Date().getFullYear()} CISAGA HUB — Digital UMKM Ecosystem Kecamatan Cisaga.</p>
           <p>Connecting Local Business, Growing Together.</p>
         </div>

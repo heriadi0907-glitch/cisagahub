@@ -11,8 +11,10 @@ import type {
   ProductCategory,
   PromoInquiryFormData,
   SavedPromoItem,
+  SocialPlatform,
   SortOption,
   UmkmListing,
+  UmkmSocialLinks,
   UmkmTier,
 } from '../types/umkm';
 
@@ -30,7 +32,122 @@ export function isSafeUmkmImagePath(url: string): boolean {
   const trimmed = url.trim();
   if (trimmed === '') return false;
   if (UMKM_IMAGE_PRESETS.some((p) => p.url === trimmed)) return true;
-  return /^\/uploads\/umkm-[a-zA-Z0-9_-]+\.(jpg|png|webp)$/.test(trimmed);
+  if (/^\/uploads\/umkm-[a-zA-Z0-9._-]+\.(jpg|jpeg|png|webp)$/.test(trimmed)) return true;
+  return (
+    /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(trimmed) &&
+    trimmed.length <= 260_000
+  );
+}
+
+export interface AdminPhotoOption {
+  id: string;
+  label: string;
+  url: string;
+}
+
+export const ADMIN_PHOTO_OPTIONS_STORAGE_KEY = 'cisagahub_admin_photo_options_v1';
+
+export function loadAdminPhotoOptions(storage?: Pick<Storage, 'getItem'> | null): AdminPhotoOption[] {
+  const target =
+    storage !== undefined
+      ? storage
+      : typeof window !== 'undefined'
+        ? window.localStorage
+        : null;
+  if (!target) return [];
+  try {
+    const raw = target.getItem(ADMIN_PHOTO_OPTIONS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (item): item is AdminPhotoOption =>
+          Boolean(item) &&
+          typeof (item as AdminPhotoOption).id === 'string' &&
+          typeof (item as AdminPhotoOption).label === 'string' &&
+          typeof (item as AdminPhotoOption).url === 'string' &&
+          (item as AdminPhotoOption).label.trim().length > 0 &&
+          isSafeUmkmImagePath((item as AdminPhotoOption).url)
+      )
+      .slice(0, 30);
+  } catch {
+    return [];
+  }
+}
+
+export function saveAdminPhotoOptions(
+  options: AdminPhotoOption[],
+  storage?: Pick<Storage, 'setItem'> | null
+): void {
+  const target =
+    storage !== undefined
+      ? storage
+      : typeof window !== 'undefined'
+        ? window.localStorage
+        : null;
+  if (!target) return;
+  try {
+    target.setItem(ADMIN_PHOTO_OPTIONS_STORAGE_KEY, JSON.stringify(options.slice(0, 30)));
+  } catch {
+    // Ignore storage quota errors
+  }
+}
+
+export function addAdminPhotoOption(
+  options: AdminPhotoOption[],
+  rawLabel: string,
+  rawUrl: string
+): { options: AdminPhotoOption[]; error?: string } {
+  const label = rawLabel.trim().slice(0, 60);
+  const url = rawUrl.trim();
+  if (label.length < 2) {
+    return { options, error: 'Nama opsi foto minimal 2 karakter.' };
+  }
+  if (!isSafeUmkmImagePath(url)) {
+    return {
+      options,
+      error: 'Unggah foto (JPG/PNG/WebP) terlebih dahulu untuk opsi ini.',
+    };
+  }
+  if (options.length >= 30) {
+    return { options, error: 'Maksimal 30 opsi foto tersimpan.' };
+  }
+  const nextOption: AdminPhotoOption = {
+    id: `opt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    label,
+    url,
+  };
+  return { options: [...options, nextOption] };
+}
+
+export function updateAdminPhotoOption(
+  options: AdminPhotoOption[],
+  id: string,
+  rawLabel: string,
+  rawUrl: string
+): { options: AdminPhotoOption[]; error?: string } {
+  const label = rawLabel.trim().slice(0, 60);
+  const url = rawUrl.trim();
+  if (label.length < 2) {
+    return { options, error: 'Nama opsi foto minimal 2 karakter.' };
+  }
+  if (!isSafeUmkmImagePath(url)) {
+    return {
+      options,
+      error: 'Unggah foto (JPG/PNG/WebP) yang valid untuk opsi ini.',
+    };
+  }
+  return {
+    options: options.map((opt) => (opt.id === id ? { ...opt, label, url } : opt)),
+  };
+}
+
+export function deleteAdminPhotoOption(
+  options: AdminPhotoOption[],
+  id: string
+): AdminPhotoOption[] {
+  return options.filter((opt) => opt.id !== id);
 }
 
 export function getListingAllImages(listing: UmkmListing): string[] {
@@ -62,6 +179,135 @@ export function buildWhatsAppUrl(phone: string, message: string): string {
     normalized = `62${digits}`;
   }
   return `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`;
+}
+
+export const SOCIAL_LINK_PLATFORMS: readonly SocialPlatform[] = [
+  'instagram',
+  'facebook',
+  'tiktok',
+  'website',
+] as const;
+
+export function normalizeSocialMediaLink(
+  platform: SocialPlatform,
+  raw: unknown
+): { value?: string; error?: string } {
+  if (typeof raw !== 'string') return {};
+  const cleaned = raw
+    .replace(/\u0000/g, '')
+    .replace(/[\u0001-\u001F\u007F]/g, '')
+    .trim();
+  if (!cleaned) return {};
+
+  if (cleaned.length > 200) {
+    return { error: 'Tautan sosial media maksimal 200 karakter.' };
+  }
+  if (/[<>]/.test(cleaned) || /\s/.test(cleaned)) {
+    return { error: 'Tautan sosial media tidak boleh mengandung spasi atau karakter khusus.' };
+  }
+
+  const lower = cleaned.toLowerCase();
+  if (/^(javascript|data|vbscript|file|blob):/.test(lower)) {
+    return { error: 'Format tautan tidak aman. Gunakan tautan https:// atau @username.' };
+  }
+
+  let candidate = cleaned;
+  if (/^https?:\/\//i.test(candidate)) {
+    // keep as provided
+  } else if (/^www\./i.test(candidate)) {
+    candidate = `https://${candidate}`;
+  } else if (platform !== 'website') {
+    const handle = candidate.replace(/^@+/, '');
+    if (!/^[a-zA-Z0-9._/-]{2,100}$/.test(handle)) {
+      return {
+        error: `Masukkan username ${platform} yang valid atau URL https://... lengkap.`,
+      };
+    }
+    if (handle.includes('.') && handle.includes('/')) {
+      candidate = `https://${handle}`;
+    } else if (platform === 'instagram') {
+      candidate = `https://instagram.com/${handle}`;
+    } else if (platform === 'tiktok') {
+      candidate = `https://www.tiktok.com/@${handle}`;
+    } else {
+      candidate = `https://www.facebook.com/${handle}`;
+    }
+  } else {
+    if (!candidate.includes('.')) {
+      return { error: 'Masukkan alamat website/toko online lengkap (contoh: https://tokoku.id).' };
+    }
+    candidate = `https://${candidate}`;
+  }
+
+  try {
+    const parsed = new URL(candidate);
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      return { error: 'Tautan harus menggunakan protokol http:// atau https://.' };
+    }
+    if (!parsed.hostname || !parsed.hostname.includes('.')) {
+      return { error: 'Nama domain pada tautan sosial media tidak valid.' };
+    }
+    const serialized = parsed.toString();
+    if (serialized.length > 200) {
+      return { error: 'Tautan sosial media maksimal 200 karakter.' };
+    }
+    return { value: serialized };
+  } catch {
+    return { error: `Format tautan ${platform} tidak valid.` };
+  }
+}
+
+export function validateAdminSocialLinks(raw?: UmkmSocialLinks): {
+  links: UmkmSocialLinks;
+  errors: Partial<Record<SocialPlatform, string>>;
+} {
+  const links: UmkmSocialLinks = {};
+  const errors: Partial<Record<SocialPlatform, string>> = {};
+  if (!raw || typeof raw !== 'object') {
+    return { links, errors };
+  }
+
+  for (const platform of SOCIAL_LINK_PLATFORMS) {
+    const result = normalizeSocialMediaLink(platform, raw[platform]);
+    if (result.error) {
+      errors[platform] = result.error;
+    } else if (result.value) {
+      links[platform] = result.value;
+    }
+  }
+
+  return { links, errors };
+}
+
+export function hasAnySocialLinks(socialLinks?: UmkmSocialLinks): boolean {
+  if (!socialLinks) return false;
+  return SOCIAL_LINK_PLATFORMS.some((platform) => {
+    const val = socialLinks[platform];
+    return typeof val === 'string' && /^https?:\/\//i.test(val.trim());
+  });
+}
+
+export function buildUmkmAutoChatMessage(
+  listing: Pick<
+    UmkmListing,
+    'businessName' | 'productName' | 'village' | 'unitLabel' | 'whatsappAutoMessage'
+  >,
+  selectedVariantLabel?: string
+): string {
+  const itemLabel =
+    (selectedVariantLabel ?? listing.unitLabel ?? listing.productName).trim() ||
+    listing.productName;
+  const template = (listing.whatsappAutoMessage ?? '').trim();
+
+  if (template.length > 0) {
+    return template
+      .replace(/\{usaha\}/gi, listing.businessName)
+      .replace(/\{produk\}/gi, listing.productName)
+      .replace(/\{menu\}/gi, itemLabel)
+      .replace(/\{desa\}/gi, listing.village);
+  }
+
+  return `Halo ${listing.businessName}, saya melihat profil dan menu/layanan "${itemLabel}" (${listing.productName}) di platform CISAGA HUB Kecamatan Cisaga. Boleh info ketersediaan dan pemesanannya?`;
 }
 
 export function getPremiumTopListings(listings: UmkmListing[]): UmkmListing[] {
@@ -179,6 +425,9 @@ export function saveListingToPromo(
       variantLabel: resolvedLabel,
       businessName: listing.businessName,
       whatsapp: listing.whatsapp,
+      ...(listing.whatsappAutoMessage
+        ? { whatsappAutoMessage: listing.whatsappAutoMessage }
+        : {}),
       village: listing.village,
       tier: listing.tier,
       estimatedPrice: resolvedPrice,
@@ -288,6 +537,18 @@ export function validateAdminUmkmForm(
   }
   if (form.shortDescription.trim().length < 10) {
     errors.shortDescription = 'Deskripsi singkat minimal 10 karakter.';
+  }
+  if ((form.whatsappAutoMessage ?? '').trim().length > 500) {
+    errors.whatsappAutoMessage = 'Template chat otomatis maksimal 500 karakter.';
+  }
+  if (form.image.trim() !== '' && !isSafeUmkmImagePath(form.image)) {
+    errors.image = 'Foto harus berupa file upload JPG, PNG, atau WebP yang valid.';
+  }
+
+  const socialValidation = validateAdminSocialLinks(form.socialLinks);
+  const firstSocialError = Object.values(socialValidation.errors).find(Boolean);
+  if (firstSocialError) {
+    errors.socialLinks = firstSocialError;
   }
 
   if (form.variants && form.variants.length > 0) {
@@ -402,11 +663,16 @@ export function createAdminListingEntry(form: AdminUmkmFormData): UmkmListing {
   const price = Math.round(Number(form.price));
   const unitLabel = form.unitLabel.trim() || 'Kemasan Standar';
   const shortDesc = form.shortDescription.trim();
-  const primaryImage = isSafeUmkmImagePath(form.image)
-    ? form.image.trim()
-    : getDefaultImageForCategory(form.category);
+  const primaryImage =
+    form.image.trim() === ''
+      ? ''
+      : isSafeUmkmImagePath(form.image)
+        ? form.image.trim()
+        : '';
   const variants = buildNormalizedVariantsFromForm(id, form, price, unitLabel);
   const galleryImages = normalizeGalleryImages(form.galleryImages, primaryImage);
+  const whatsappAutoMessage = (form.whatsappAutoMessage ?? '').trim().slice(0, 500);
+  const { links: socialLinks } = validateAdminSocialLinks(form.socialLinks);
 
   return {
     id,
@@ -416,6 +682,8 @@ export function createAdminListingEntry(form: AdminUmkmFormData): UmkmListing {
     category: form.category,
     village: form.village,
     whatsapp: form.whatsapp.replace(/[^0-9]/g, ''),
+    ...(whatsappAutoMessage ? { whatsappAutoMessage } : {}),
+    ...(Object.keys(socialLinks).length > 0 ? { socialLinks } : {}),
     tier: form.tier,
     status: form.status,
     price: variants[0]?.price ?? price,
@@ -436,7 +704,12 @@ export function updateAdminListingEntry(
   const price = Math.round(Number(form.price));
   const unitLabel = form.unitLabel.trim() || existing.unitLabel;
   const shortDesc = form.shortDescription.trim();
-  const primaryImage = isSafeUmkmImagePath(form.image) ? form.image.trim() : existing.image;
+  const primaryImage =
+    form.image.trim() === ''
+      ? ''
+      : isSafeUmkmImagePath(form.image)
+        ? form.image.trim()
+        : existing.image;
   const variants =
     form.variants && form.variants.length > 0
       ? buildNormalizedVariantsFromForm(existing.id, form, price, unitLabel)
@@ -444,6 +717,8 @@ export function updateAdminListingEntry(
           idx === 0 ? { ...v, label: unitLabel, price } : v
         );
   const galleryImages = normalizeGalleryImages(form.galleryImages, primaryImage);
+  const whatsappAutoMessage = (form.whatsappAutoMessage ?? '').trim().slice(0, 500);
+  const { links: socialLinks } = validateAdminSocialLinks(form.socialLinks);
 
   return {
     ...existing,
@@ -453,6 +728,8 @@ export function updateAdminListingEntry(
     category: form.category,
     village: form.village,
     whatsapp: form.whatsapp.replace(/[^0-9]/g, ''),
+    whatsappAutoMessage,
+    socialLinks,
     tier: form.tier,
     status: form.status,
     price: variants[0]?.price ?? price,

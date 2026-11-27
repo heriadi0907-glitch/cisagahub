@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { CISAGA_VILLAGES, INITIAL_UMKM_LISTINGS } from '../data/cisagaData';
+import { createAdminListingEntry } from './umkmLogic';
 import { buildCisagaProfileSlides, getNextSlideIndex } from './cisagaProfileSlides';
 
 const EXPECTED_11_VILLAGES = [
@@ -17,7 +18,7 @@ const EXPECTED_11_VILLAGES = [
   'Desa Wangunjaya',
 ];
 
-test('buildCisagaProfileSlides creates overview slide plus all 11 Cisaga villages', () => {
+test('buildCisagaProfileSlides creates overview slide plus all 11 Cisaga villages with dynamic counts', () => {
   assert.equal(CISAGA_VILLAGES.length, 11);
   for (const villageName of EXPECTED_11_VILLAGES) {
     assert.ok(
@@ -26,25 +27,46 @@ test('buildCisagaProfileSlides creates overview slide plus all 11 Cisaga village
     );
   }
 
-  const slides = buildCisagaProfileSlides(CISAGA_VILLAGES, INITIAL_UMKM_LISTINGS, 74);
+  const emptySlides = buildCisagaProfileSlides(CISAGA_VILLAGES, INITIAL_UMKM_LISTINGS, 0);
 
-  assert.equal(slides.length, 12);
-  assert.equal(slides[0].id, 'wilayah-kecamatan-cisaga');
-  assert.equal(slides[0].indexLabel, '01');
-  assert.equal(slides[0].umkmCount, 74);
-  assert.match(slides[0].subtitle, /11 Desa Terhubung/);
-  assert.equal(slides[0].villageFilterTarget, null);
+  assert.equal(emptySlides.length, 12);
+  assert.equal(emptySlides[0].id, 'wilayah-kecamatan-cisaga');
+  assert.equal(emptySlides[0].indexLabel, '01');
+  assert.equal(emptySlides[0].umkmCount, 0);
+  assert.match(emptySlides[0].subtitle, /11 Desa Terhubung/);
+  assert.equal(emptySlides[0].villageFilterTarget, null);
 
-  const cisagaCenterSlide = slides.find((s) => s.villageFilterTarget === 'Desa Cisaga');
+  const cisagaCenterSlide = emptySlides.find((s) => s.villageFilterTarget === 'Desa Cisaga');
   assert.ok(cisagaCenterSlide);
   assert.match(cisagaCenterSlide.subtitle, /Pusat Pemerintahan/i);
 
-  const bangunharjaSlide = slides.find((s) => s.villageFilterTarget === 'Desa Bangunharja');
-  assert.ok(bangunharjaSlide);
-  assert.equal(bangunharjaSlide.shortLabel, 'Bangunharja');
-  assert.equal(bangunharjaSlide.umkmCount, 9);
+  const emptyBangunharja = emptySlides.find((s) => s.villageFilterTarget === 'Desa Bangunharja');
+  assert.ok(emptyBangunharja);
+  assert.equal(emptyBangunharja.shortLabel, 'Bangunharja');
+  assert.equal(emptyBangunharja.umkmCount, 0);
 
-  const sukahuripSlide = slides.find((s) => s.villageFilterTarget === 'Desa Sukahurip');
+  const activeBangunharja = createAdminListingEntry({
+    businessName: 'Saung Nira Bangunharja',
+    ownerName: 'Pak Hendra',
+    productName: 'Gula Semut Organik',
+    category: 'Agribisnis',
+    village: 'Desa Bangunharja',
+    whatsapp: '081211112222',
+    tier: 'premium',
+    status: 'Aktif',
+    price: '32000',
+    unitLabel: 'Kemasan 500g',
+    shortDescription: 'Gula aren semut alami khas petani Desa Bangunharja.',
+    image: '',
+  });
+  const activeSlides = buildCisagaProfileSlides(CISAGA_VILLAGES, [activeBangunharja], 1);
+  assert.equal(activeSlides[0].umkmCount, 1);
+  assert.equal(
+    activeSlides.find((s) => s.villageFilterTarget === 'Desa Bangunharja')?.umkmCount,
+    1
+  );
+
+  const sukahuripSlide = emptySlides.find((s) => s.villageFilterTarget === 'Desa Sukahurip');
   assert.ok(sukahuripSlide);
   assert.equal(sukahuripSlide.shortLabel, 'Sukahurip');
 });

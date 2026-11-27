@@ -91,22 +91,22 @@ export function HeroSection({
   return (
     <section
       id="beranda"
-      className="pt-8 pb-10 sm:pt-12 sm:pb-14 bg-white border-b border-[#E2E8F0]"
+      className="pt-5 pb-6 sm:pt-7 sm:pb-8 bg-white border-b border-[#E2E8F0]"
     >
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
           {/* Left Narrative Column */}
-          <div className="lg:col-span-5 flex flex-col justify-center py-2">
-            <p className="text-xs font-semibold tracking-wide text-[#C2410C] mb-3.5">
+          <div className="lg:col-span-5 flex flex-col justify-center py-1">
+            <p className="text-xs font-semibold tracking-wide text-[#C2410C] mb-2">
               CISAGA HUB · Digital UMKM Ecosystem Kecamatan Cisaga
             </p>
             <h1
-              className="font-display font-bold text-[#0F2744] tracking-tight leading-[1.08] mb-4"
-              style={{ fontSize: 'clamp(2.15rem, 3.6vw, 3.1rem)', textWrap: 'balance' }}
+              className="font-display font-bold text-[#0F2744] tracking-tight leading-[1.08] mb-3"
+              style={{ fontSize: 'clamp(2.05rem, 3.4vw, 2.9rem)', textWrap: 'balance' }}
             >
               Connecting Local Business, Growing Together.
             </h1>
-            <p className="text-base sm:text-[17px] leading-[1.65] text-[#475569] max-w-[50ch] mb-7">
+            <p className="text-sm sm:text-base leading-[1.58] text-[#475569] max-w-[48ch] mb-5">
               Setiap usaha memiliki potensi untuk berkembang.{' '}
               <strong className="font-semibold text-[#0F2744]">CISAGA HUB</strong> hadir sebagai
               jembatan digital yang menghubungkan potensi usaha lokal Kecamatan Cisaga dengan
@@ -143,7 +143,7 @@ export function HeroSection({
               className="flex flex-col h-full rounded-xl border border-[#E2E8F0] bg-white overflow-hidden"
             >
               {/* Slide Media & Measured Overlay */}
-              <div className="relative min-h-[360px] sm:min-h-[380px] lg:flex-1 lg:min-h-[400px] bg-[#0F2744] overflow-hidden">
+              <div className="relative min-h-[290px] sm:min-h-[320px] lg:flex-1 lg:min-h-[340px] bg-[#0F2744] overflow-hidden">
                 <div key={activeSlide.id} className="absolute inset-0 cisaga-slide-enter">
                   <ProductImage
                     src={activeSlide.image}
@@ -209,17 +209,17 @@ export function HeroSection({
                   className="pointer-events-none absolute inset-x-0 bottom-0 h-64 sm:h-72 bg-gradient-to-t from-[#0B1E36]/95 via-[#0B1E36]/80 to-transparent"
                 />
 
-                <div className="absolute inset-x-0 bottom-0 z-10 p-4 sm:p-6">
-                  <p className="text-xs font-semibold text-[#FDBA74] mb-1 truncate">
+                <div className="absolute inset-x-0 bottom-0 z-10 p-4 sm:p-5">
+                  <p className="text-xs font-semibold text-[#FDBA74] mb-0.5 truncate">
                     Profil Wilayah · {activeSlide.subtitle}
                   </p>
                   <h2
                     data-testid="active-slide-title"
-                    className="font-display text-xl sm:text-2xl font-bold text-white leading-tight mb-1.5"
+                    className="font-display text-xl sm:text-2xl font-bold text-white leading-tight mb-1"
                   >
                     {activeSlide.title}
                   </h2>
-                  <p className="text-xs sm:text-sm text-white/90 leading-relaxed line-clamp-2 max-w-[58ch] mb-3.5">
+                  <p className="text-xs sm:text-sm text-white/90 leading-relaxed line-clamp-2 max-w-[58ch] mb-2.5">
                     {activeSlide.description}
                   </p>
 
@@ -282,7 +282,7 @@ export function HeroSection({
         </div>
 
         {/* Full-Width 4-Column Proof Strip */}
-        <div className="mt-10 pt-7 border-t border-[#E2E8F0] grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+        <div className="mt-6 pt-5 border-t border-[#E2E8F0] grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <div>
             <p className="font-mono tabular-nums text-2xl sm:text-3xl font-semibold text-[#0F2744]">
               {totalPartnerCount}

@@ -75,49 +75,49 @@ export function PartnerRegistrationSection({
   };
 
   return (
-    <section id="daftar-mitra" className="scroll-mt-16 py-14 sm:py-20 bg-[#F8FAFC]">
+    <section id="daftar-mitra" className="scroll-mt-14 py-7 sm:py-9 bg-[#F8FAFC]">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           {/* Paket Promosi Comparison */}
-          <div id="cerita-cisaga" className="scroll-mt-20 lg:col-span-5">
-            <p className="text-xs font-semibold text-[#C2410C] mb-2">
+          <div id="cerita-cisaga" className="scroll-mt-16 lg:col-span-5">
+            <p className="text-xs font-semibold text-[#C2410C] mb-1">
               Daftarkan UMKM · Ekosistem CISAGA HUB
             </p>
-            <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0F2744] tracking-tight mb-4">
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0F2744] tracking-tight mb-2.5">
               Daftar Gratis atau Tampil Paling Atas di Paket Premium
             </h2>
-            <p className="text-sm sm:text-base text-[#475569] leading-relaxed mb-6">
+            <p className="text-sm text-[#475569] leading-relaxed mb-4">
               Setiap pelaku UMKM di Kecamatan Cisaga dapat bergabung tanpa biaya (Reguler). Untuk
               promosi maksimal di halaman utama, usaha terkurasi dapat mengaktifkan status
               Premium.
             </p>
 
             <div className="divide-y divide-[#E2E8F0] border-y border-[#E2E8F0]">
-              <div className="py-4">
+              <div className="py-3">
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <h3 className="text-sm font-semibold text-[#0F2744]">
                     01. Paket Reguler (Daftar Free)
                   </h3>
                   <span className="font-mono text-xs font-semibold text-[#047857]">Gratis</span>
                 </div>
-                <p className="text-sm text-[#475569]">
+                <p className="text-xs sm:text-sm text-[#475569]">
                   Tampil di katalog utama seluruh UMKM, direktori desa asal, serta tautan kontak
                   WhatsApp langsung ke pemilik usaha.
                 </p>
               </div>
-              <div className="py-4">
+              <div className="py-3">
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <h3 className="text-sm font-semibold text-[#0F2744]">
                     02. Paket Premium (Promosi Teratas)
                   </h3>
                   <span className="font-mono text-xs font-semibold text-[#C2410C]">Posisi Atas</span>
                 </div>
-                <p className="text-sm text-[#475569]">
+                <p className="text-xs sm:text-sm text-[#475569]">
                   Ditampilkan di bagian paling atas halaman (Sorotan Promosi UMKM), urutan teratas
                   katalog, dan tombol Chat WA cepat di kartu utama.
                 </p>
               </div>
-              <div className="py-4 flex items-center justify-between gap-4">
+              <div className="py-3 flex items-center justify-between gap-4">
                 <p className="text-xs text-[#475569]">
                   Developer pengelola CISAGA HUB? Kelola status dan data UMKM di Panel Admin.
                 </p>
@@ -133,11 +133,11 @@ export function PartnerRegistrationSection({
           </div>
 
           {/* Free Registration Form */}
-          <div className="lg:col-span-7 bg-white border border-[#E2E8F0] rounded-xl p-6 sm:p-8">
-            <h3 className="font-display text-xl font-bold text-[#0F2744] mb-1.5">
+          <div className="lg:col-span-7 bg-white border border-[#E2E8F0] rounded-xl p-5 sm:p-6">
+            <h3 className="font-display text-lg sm:text-xl font-bold text-[#0F2744] mb-1">
               Formulir Daftarkan UMKM Reguler (Free)
             </h3>
-            <p className="text-sm text-[#475569] mb-6">
+            <p className="text-xs sm:text-sm text-[#475569] mb-4">
               Daftarkan usaha Anda tanpa biaya. Data akan masuk ke antrean verifikasi Admin
               CISAGA HUB Kecamatan Cisaga.
             </p>
@@ -146,7 +146,7 @@ export function PartnerRegistrationSection({
               <div
                 role="status"
                 data-testid="partner-success-banner"
-                className="mb-6 p-4 bg-[#047857]/5 border border-[#047857]/30 rounded-lg flex items-start gap-3"
+                className="mb-4 p-3.5 bg-[#047857]/5 border border-[#047857]/30 rounded-lg flex items-start gap-3"
               >
                 <CheckCircle2
                   className="w-5 h-5 text-[#047857] shrink-0 mt-0.5"
@@ -175,12 +175,12 @@ export function PartnerRegistrationSection({
               </div>
             )}
 
-            <form onSubmit={handleSubmit} noValidate className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} noValidate className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label
                     htmlFor="partner-business-name"
-                    className="block text-xs font-semibold text-[#0F2744] mb-1.5"
+                    className="block text-xs font-semibold text-[#0F2744] mb-1"
                   >
                     Nama Usaha / Brand
                   </label>
@@ -193,7 +193,7 @@ export function PartnerRegistrationSection({
                       if (errors.businessName) setErrors({ ...errors, businessName: undefined });
                     }}
                     placeholder="Contoh: Keripik Tempe Mekar"
-                    className="w-full px-3.5 py-2.5 text-sm bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
+                    className="w-full px-3 py-2 text-sm bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
                   />
                   {errors.businessName && (
                     <p className="text-xs text-[#B91C1C] mt-1">{errors.businessName}</p>
@@ -203,7 +203,7 @@ export function PartnerRegistrationSection({
                 <div>
                   <label
                     htmlFor="partner-owner-name"
-                    className="block text-xs font-semibold text-[#0F2744] mb-1.5"
+                    className="block text-xs font-semibold text-[#0F2744] mb-1"
                   >
                     Nama Pemilik
                   </label>
@@ -216,7 +216,7 @@ export function PartnerRegistrationSection({
                       if (errors.ownerName) setErrors({ ...errors, ownerName: undefined });
                     }}
                     placeholder="Nama lengkap penanggung jawab"
-                    className="w-full px-3.5 py-2.5 text-sm bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
+                    className="w-full px-3 py-2 text-sm bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
                   />
                   {errors.ownerName && (
                     <p className="text-xs text-[#B91C1C] mt-1">{errors.ownerName}</p>
@@ -224,11 +224,11 @@ export function PartnerRegistrationSection({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label
                     htmlFor="partner-village"
-                    className="block text-xs font-semibold text-[#0F2744] mb-1.5"
+                    className="block text-xs font-semibold text-[#0F2744] mb-1"
                   >
                     Desa Asal (Kec. Cisaga)
                   </label>
@@ -239,7 +239,7 @@ export function PartnerRegistrationSection({
                       setForm({ ...form, village: e.target.value });
                       if (errors.village) setErrors({ ...errors, village: undefined });
                     }}
-                    className="w-full px-3.5 py-2.5 text-sm bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
+                    className="w-full px-3 py-2 text-sm bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
                   >
                     <option value="">Pilih Desa...</option>
                     {villages.map((v) => (
@@ -256,7 +256,7 @@ export function PartnerRegistrationSection({
                 <div>
                   <label
                     htmlFor="partner-category"
-                    className="block text-xs font-semibold text-[#0F2744] mb-1.5"
+                    className="block text-xs font-semibold text-[#0F2744] mb-1"
                   >
                     Kategori Usaha
                   </label>
@@ -269,7 +269,7 @@ export function PartnerRegistrationSection({
                         category: e.target.value as BusinessCategory,
                       })
                     }
-                    className="w-full px-3.5 py-2.5 text-sm bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
+                    className="w-full px-3 py-2 text-sm bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
                   >
                     {BUSINESS_CATEGORIES.map((cat) => (
                       <option key={cat} value={cat}>
@@ -280,7 +280,7 @@ export function PartnerRegistrationSection({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label
                     htmlFor="partner-whatsapp"

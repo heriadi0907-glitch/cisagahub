@@ -1,11 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CISAGA_VILLAGES, INITIAL_UMKM_LISTINGS } from '../data/cisagaData';
 import {
+  CISAGA_VILLAGES,
+  INITIAL_TESTIMONIALS,
+  INITIAL_UMKM_LISTINGS,
+} from '../data/cisagaData';
+import type { UmkmListing } from '../types/umkm';
+import {
+  addAdminPhotoOption,
+  buildUmkmAutoChatMessage,
   buildWhatsAppUrl,
   createAdminListingEntry,
   createFreeListingEntry,
   cycleListingStatus,
+  deleteAdminPhotoOption,
   deleteListingById,
   filterAdminListings,
   filterAndSortListings,
@@ -16,23 +24,142 @@ import {
   getMonthlyUmkmRegistrationTrend,
   getPremiumTopListings,
   getTestimonialStats,
+  hasAnySocialLinks,
   isAuthorizedAdminEmail,
   isDeveloperAdminPath,
+  isSafeUmkmImagePath,
+  loadAdminPhotoOptions,
+  normalizeSocialMediaLink,
+  saveAdminPhotoOptions,
   splitTextByHighlight,
   toggleListingTier,
   updateAdminListingEntry,
+  updateAdminPhotoOption,
+  validateAdminSocialLinks,
   validateAdminUmkmForm,
   validateContactMessageForm,
   validateFreeRegistrationForm,
   validateTestimonialForm,
 } from './umkmLogic';
 
+const createSampleUmkmFixtures = (): UmkmListing[] => [
+  {
+    ...createAdminListingEntry({
+      businessName: 'KUB Nira Lestari',
+      ownerName: 'Pak Hendra',
+      productName: 'Gula Aren Semut Organik',
+      category: 'Agribisnis',
+      village: 'Desa Bangunharja',
+      whatsapp: '081211110001',
+      tier: 'premium',
+      status: 'Aktif',
+      price: '32000',
+      unitLabel: 'Kemasan 500g',
+      shortDescription: 'Gula aren semut murni olahan petani penderes Desa Bangunharja.',
+      image: '',
+    }),
+    id: 'gula-aren-bangunharja',
+    createdAt: '2026-09-05',
+  },
+  {
+    ...createAdminListingEntry({
+      businessName: 'Batik Galuh Mekar',
+      ownerName: 'Ibu Yanti',
+      productName: 'Kain Batik Tulis Motif Cisaga',
+      category: 'Busana',
+      village: 'Desa Mekarmukti',
+      whatsapp: '081211110002',
+      tier: 'premium',
+      status: 'Aktif',
+      price: '185000',
+      unitLabel: 'Lembar 2m',
+      shortDescription: 'Batik tulis dan cap khas tatar Galuh dari perajin Desa Mekarmukti.',
+      image: '',
+    }),
+    id: 'batik-ciamis-mekarmukti',
+    createdAt: '2026-09-12',
+  },
+  {
+    ...createAdminListingEntry({
+      businessName: 'Sentra Promosi CISAGA HUB',
+      ownerName: 'Kang Roni',
+      productName: 'Paket Hantaran Oleh-Oleh Cisaga',
+      category: 'Kuliner',
+      village: 'Desa Cisaga',
+      whatsapp: '081211110003',
+      tier: 'premium',
+      status: 'Aktif',
+      price: '95000',
+      unitLabel: 'Box Hantaran',
+      shortDescription: 'Paket hantaran aneka produk unggulan pelaku usaha Kecamatan Cisaga.',
+      image: '',
+    }),
+    id: 'hampers-karya-cisaga',
+    createdAt: '2026-09-21',
+  },
+  {
+    ...createAdminListingEntry({
+      businessName: 'Dapur Ibu Enok',
+      ownerName: 'Ibu Enok',
+      productName: 'Sale Pisang Asap Renyah',
+      category: 'Kuliner',
+      village: 'Desa Wangunjaya',
+      whatsapp: '081211110004',
+      tier: 'reguler',
+      status: 'Aktif',
+      price: '20000',
+      unitLabel: 'Pouch 250g',
+      shortDescription: 'Sale pisang asap manis legit olahan rumahan Desa Wangunjaya.',
+      image: '',
+    }),
+    id: 'sale-pisang-wangunjaya',
+    createdAt: '2026-10-03',
+  },
+  {
+    ...createAdminListingEntry({
+      businessName: 'Kriya Bambu Tanjung',
+      ownerName: 'Pak Ujang',
+      productName: 'Anyaman Bambu Nampan & Besek',
+      category: 'Kerajinan',
+      village: 'Desa Tanjungjaya',
+      whatsapp: '081211110005',
+      tier: 'reguler',
+      status: 'Aktif',
+      price: '45000',
+      unitLabel: 'Set 5 Pcs',
+      shortDescription: 'Kerajinan anyaman bambu halus untuk kemasan makanan dan dekorasi.',
+      image: '',
+    }),
+    id: 'anyaman-bambu-tanjungjaya',
+    createdAt: '2026-10-11',
+  },
+  {
+    ...createAdminListingEntry({
+      businessName: 'Kopi Rakyat Kepel',
+      ownerName: 'Mang Dede',
+      productName: 'Kopi Robusta Sangrai Kepel',
+      category: 'Agribisnis',
+      village: 'Desa Kepel',
+      whatsapp: '081211110006',
+      tier: 'reguler',
+      status: 'Aktif',
+      price: '35000',
+      unitLabel: 'Pouch 200g',
+      shortDescription: 'Kopi robusta petik merah dataran tinggi Desa Kepel Kecamatan Cisaga.',
+      image: '',
+    }),
+    id: 'kopi-kepel-cisaga',
+    createdAt: '2026-10-20',
+  },
+];
+
 test('getPremiumTopListings returns only active premium listings and featured sort places premium first', () => {
-  const premium = getPremiumTopListings(INITIAL_UMKM_LISTINGS);
+  const sampleListings = createSampleUmkmFixtures();
+  const premium = getPremiumTopListings(sampleListings);
   assert.equal(premium.length, 3);
   assert.ok(premium.every((item) => item.tier === 'premium' && item.status === 'Aktif'));
 
-  const sortedAll = filterAndSortListings(INITIAL_UMKM_LISTINGS, {
+  const sortedAll = filterAndSortListings(sampleListings, {
     category: 'Semua',
     tierFilter: 'all',
     village: 'Semua Desa',
@@ -45,11 +172,12 @@ test('getPremiumTopListings returns only active premium listings and featured so
 });
 
 test('admin tier toggle, status toggle, and delete update listings accurately', () => {
-  const saleItem = INITIAL_UMKM_LISTINGS.find((i) => i.id === 'sale-pisang-wangunjaya')!;
+  const sampleListings = createSampleUmkmFixtures();
+  const saleItem = sampleListings.find((i) => i.id === 'sale-pisang-wangunjaya')!;
   assert.equal(saleItem.tier, 'reguler');
 
   // Upgrade reguler to premium -> now appears in getPremiumTopListings
-  const upgraded = toggleListingTier(INITIAL_UMKM_LISTINGS, saleItem.id);
+  const upgraded = toggleListingTier(sampleListings, saleItem.id);
   assert.equal(getPremiumTopListings(upgraded).length, 4);
 
   // Deactivate an active item -> excluded from public active premium list
@@ -58,7 +186,7 @@ test('admin tier toggle, status toggle, and delete update listings accurately', 
 
   // Delete removes item completely
   const afterDelete = deleteListingById(deactivated, saleItem.id);
-  assert.equal(afterDelete.length, INITIAL_UMKM_LISTINGS.length - 1);
+  assert.equal(afterDelete.length, sampleListings.length - 1);
 });
 
 test('admin and free registration forms validate inputs and create proper tier entries', () => {
@@ -292,7 +420,8 @@ test('getAdminPortalSummary calculates active UMKM, unread messages, and premium
     shortDescription: 'Batik tulis motif khas Cisaga untuk contoh status nonaktif.',
     image: '',
   });
-  const sampleListings = [...INITIAL_UMKM_LISTINGS, pendingFree, inactivePremium];
+  const baseFixtures = createSampleUmkmFixtures();
+  const sampleListings = [...baseFixtures, pendingFree, inactivePremium];
   const sampleMessages = [
     {
       id: 'm1',
@@ -327,13 +456,20 @@ test('getAdminPortalSummary calculates active UMKM, unread messages, and premium
   ];
 
   const summary = getAdminPortalSummary(sampleListings, sampleMessages);
-  const expectedActive = INITIAL_UMKM_LISTINGS.filter((item) => item.status === 'Aktif').length;
+  const expectedActive = baseFixtures.filter((item) => item.status === 'Aktif').length;
   const expectedPremium =
-    INITIAL_UMKM_LISTINGS.filter((item) => item.tier === 'premium').length + 1;
+    baseFixtures.filter((item) => item.tier === 'premium').length + 1;
 
   assert.equal(summary.activeUmkmCount, expectedActive);
   assert.equal(summary.unreadMessagesCount, 2);
   assert.equal(summary.premiumUmkmCount, expectedPremium);
+
+  const emptySummary = getAdminPortalSummary([], []);
+  assert.deepEqual(emptySummary, {
+    activeUmkmCount: 0,
+    unreadMessagesCount: 0,
+    premiumUmkmCount: 0,
+  });
 });
 
 test('filterAdminListings performs real-time live search prioritizing businessName matches across tabs', () => {
@@ -404,7 +540,8 @@ test('getMonthlyUmkmRegistrationTrend aggregates monthly registrations continuou
     createdAt: '2026-11-18',
   };
 
-  const trend = getMonthlyUmkmRegistrationTrend([...INITIAL_UMKM_LISTINGS, novEntry], fixedNow);
+  const sampleFixtures = createSampleUmkmFixtures();
+  const trend = getMonthlyUmkmRegistrationTrend([...sampleFixtures, novEntry], fixedNow);
   assert.equal(trend.length, 6);
   assert.equal(trend[0].monthKey, '2026-06');
   assert.equal(trend[trend.length - 1].monthKey, '2026-11');
@@ -511,19 +648,21 @@ test('validateTestimonialForm and getTestimonialStats validate inputs and comput
 });
 
 test('getCatalogInstantSuggestions returns ranked live results by product, business, variant, and village', () => {
-  assert.deepEqual(getCatalogInstantSuggestions(INITIAL_UMKM_LISTINGS, '   '), []);
+  const sampleListings = createSampleUmkmFixtures();
+  assert.deepEqual(getCatalogInstantSuggestions(sampleListings, '   '), []);
+  assert.deepEqual(getCatalogInstantSuggestions([], 'gula'), []);
 
-  const gulaMatches = getCatalogInstantSuggestions(INITIAL_UMKM_LISTINGS, 'gula', 4);
+  const gulaMatches = getCatalogInstantSuggestions(sampleListings, 'gula', 4);
   assert.ok(gulaMatches.length >= 1);
   assert.equal(gulaMatches[0].listing.id, 'gula-aren-bangunharja');
   assert.equal(gulaMatches[0].matchField, 'Produk');
 
-  const villageMatches = getCatalogInstantSuggestions(INITIAL_UMKM_LISTINGS, 'Mekarmukti', 6);
+  const villageMatches = getCatalogInstantSuggestions(sampleListings, 'Mekarmukti', 6);
   assert.ok(villageMatches.length >= 1);
   assert.ok(villageMatches.every((entry) => entry.listing.status === 'Aktif'));
   assert.ok(villageMatches.some((entry) => entry.matchField === 'Desa'));
 
-  const limited = getCatalogInstantSuggestions(INITIAL_UMKM_LISTINGS, 'Desa', 2);
+  const limited = getCatalogInstantSuggestions(sampleListings, 'Desa', 2);
   assert.equal(limited.length, 2);
 });
 
@@ -554,38 +693,268 @@ test('isAuthorizedAdminEmail authorizes verified owner and heriadi0907@gmail.com
   assert.equal(isAuthorizedAdminEmail(null, true), false);
 });
 
-test('INITIAL_UMKM_LISTINGS covers all 11 Cisaga villages with Google Maps verified contacts and valid Firestore shapes', () => {
-  const validVillages = new Set(CISAGA_VILLAGES.map((v) => v.name));
-  const validCategories = new Set(['Kuliner', 'Kerajinan', 'Agribisnis', 'Busana']);
+test('INITIAL_UMKM_LISTINGS and INITIAL_TESTIMONIALS start empty while all 11 Cisaga villages have zero base count', () => {
+  assert.equal(INITIAL_UMKM_LISTINGS.length, 0);
+  assert.equal(INITIAL_TESTIMONIALS.length, 0);
+  assert.equal(CISAGA_VILLAGES.length, 11);
 
   for (const village of CISAGA_VILLAGES) {
-    const gmapsInVillage = INITIAL_UMKM_LISTINGS.filter(
-      (item) => item.village === village.name && item.id.startsWith('gmaps-') && item.status === 'Aktif'
-    );
-    assert.ok(
-      gmapsInVillage.length >= 1,
-      `Expected at least 1 Google Maps verified UMKM for ${village.name}`
-    );
-  }
-
-  for (const item of INITIAL_UMKM_LISTINGS) {
-    assert.match(item.id, /^[a-zA-Z0-9_-]{2,80}$/);
-    assert.ok(item.businessName.length >= 3 && item.businessName.length <= 100);
-    assert.ok(item.ownerName.length >= 3 && item.ownerName.length <= 80);
-    assert.ok(item.productName.length >= 3 && item.productName.length <= 120);
-    assert.ok(validCategories.has(item.category));
-    assert.ok(validVillages.has(item.village));
-    assert.match(item.whatsapp, /^08[0-9]{8,13}$/);
-    assert.ok(item.price >= 1000 && item.price <= 100_000_000);
-    assert.ok(item.shortDescription.length >= 10 && item.shortDescription.length <= 300);
-    assert.ok(item.fullDescription.length >= 10 && item.fullDescription.length <= 1000);
-    assert.ok(item.variants.length >= 1 && item.variants.length <= 25);
-    assert.ok(item.variants[0].label.length >= 2 && item.variants[0].price >= 1000);
+    assert.ok(village.name.startsWith('Desa '));
+    assert.equal(village.baseUmkmCount, 0);
+    assert.ok(village.coordinatesLabel.length > 0);
   }
 });
 
+test('normalizeSocialMediaLink, validateAdminSocialLinks, and hasAnySocialLinks normalize handles and block XSS URLs', () => {
+  assert.equal(
+    normalizeSocialMediaLink('instagram', '@kedai.cisaga').value,
+    'https://instagram.com/kedai.cisaga'
+  );
+  assert.equal(
+    normalizeSocialMediaLink('tiktok', 'kopi_cisaga').value,
+    'https://www.tiktok.com/@kopi_cisaga'
+  );
+  assert.equal(
+    normalizeSocialMediaLink('facebook', 'toko.cisaga').value,
+    'https://www.facebook.com/toko.cisaga'
+  );
+  assert.equal(
+    normalizeSocialMediaLink('website', 'umkmcisaga.id').value,
+    'https://umkmcisaga.id/'
+  );
 
+  assert.ok(normalizeSocialMediaLink('instagram', 'javascript:alert(1)').error);
+  assert.ok(normalizeSocialMediaLink('website', 'data:text/html,<script>').error);
+  assert.ok(normalizeSocialMediaLink('facebook', 'nama dengan spasi').error);
+  assert.ok(normalizeSocialMediaLink('website', 'tanpadomain').error);
 
+  const validSet = validateAdminSocialLinks({
+    instagram: '@batik_cisaga',
+    website: 'https://batikcisaga.id/katalog',
+    facebook: '',
+  });
+  assert.deepEqual(validSet.errors, {});
+  assert.equal(validSet.links.instagram, 'https://instagram.com/batik_cisaga');
+  assert.equal(validSet.links.website, 'https://batikcisaga.id/katalog');
+  assert.equal(validSet.links.facebook, undefined);
 
+  assert.equal(hasAnySocialLinks(validSet.links), true);
+  assert.equal(hasAnySocialLinks({}), false);
+  assert.equal(hasAnySocialLinks(undefined), false);
+});
 
+test('buildUmkmAutoChatMessage renders fallback and custom template placeholders accurately', () => {
+  const defaultMsg = buildUmkmAutoChatMessage(
+    {
+      businessName: 'Saung Liwet',
+      productName: 'Nasi Liwet Kastrol',
+      village: 'Desa Cisaga',
+      unitLabel: 'Paket 4 Orang',
+      whatsappAutoMessage: '',
+    },
+    'Paket Liwet Komplit'
+  );
+  assert.match(defaultMsg, /Saung Liwet/);
+  assert.match(defaultMsg, /Paket Liwet Komplit/);
+  assert.match(defaultMsg, /CISAGA HUB/);
+
+  const customMsg = buildUmkmAutoChatMessage(
+    {
+      businessName: 'Kedai Kopi Cisaga',
+      productName: 'Kopi Robusta Asli',
+      village: 'Desa Bangunharja',
+      unitLabel: 'Kemasan 250g',
+      whatsappAutoMessage: 'Halo {usaha} ({desa}), saya ingin pesan {menu} - {produk}.',
+    },
+    'Giling Halus 500g'
+  );
+  assert.equal(
+    customMsg,
+    'Halo Kedai Kopi Cisaga (Desa Bangunharja), saya ingin pesan Giling Halus 500g - Kopi Robusta Asli.'
+  );
+});
+
+test('isSafeUmkmImagePath accepts compressed base64 raster uploads and rejects SVG or HTML payloads', () => {
+  const validPng =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+  const validJpeg = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/';
+  const validWebp = 'data:image/webp;base64,UklGRh4AAABXRUJQVlA4TBEAAAAvAAAAAAfQ//73v/+BiOh/AAA=';
+
+  assert.equal(isSafeUmkmImagePath(validPng), true);
+  assert.equal(isSafeUmkmImagePath(validJpeg), true);
+  assert.equal(isSafeUmkmImagePath(validWebp), true);
+  assert.equal(isSafeUmkmImagePath('data:image/svg+xml;base64,PHN2Zz48L3N2Zz4='), false);
+  assert.equal(isSafeUmkmImagePath('data:text/html;base64,PHNjcmlwdD4='), false);
+  assert.equal(isSafeUmkmImagePath('javascript:alert(1)'), false);
+});
+
+test('validateAdminUmkmForm, createAdminListingEntry, and updateAdminListingEntry handle whatsappAutoMessage, socialLinks, and base64 photos', () => {
+  const invalidSocial = validateAdminUmkmForm({
+    businessName: 'Usaha Valid',
+    ownerName: 'Pak Valid',
+    productName: 'Produk Valid',
+    category: 'Kuliner',
+    village: 'Desa Cisaga',
+    whatsapp: '081234567890',
+    whatsappAutoMessage: 'Halo {usaha}',
+    socialLinks: { instagram: 'javascript:alert(1)' },
+    tier: 'reguler',
+    status: 'Aktif',
+    price: '15000',
+    unitLabel: 'Porsi',
+    shortDescription: 'Deskripsi produk minimal sepuluh karakter aman.',
+    image: '',
+  });
+  assert.ok(invalidSocial.socialLinks);
+
+  const validPng =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+  const created = createAdminListingEntry({
+    businessName: 'Warung Sambal Cisaga',
+    ownerName: 'Ibu Neng',
+    productName: 'Sambal Terasi Asli',
+    category: 'Kuliner',
+    village: 'Desa Sidamulya',
+    whatsapp: '0813-2200-1122',
+    whatsappAutoMessage: 'Halo {usaha}, mau pesan {menu} ya.',
+    socialLinks: {
+      instagram: '@warungsambal.cisaga',
+      tiktok: 'warungsambal',
+    },
+    tier: 'premium',
+    status: 'Aktif',
+    price: '25000',
+    unitLabel: 'Toples 200g',
+    shortDescription: 'Sambal rumahan pedas nikmat khas Desa Sidamulya Kecamatan Cisaga.',
+    image: validPng,
+    variants: [
+      {
+        label: 'Toples 200g Original',
+        price: '25000',
+        availabilityNote: 'Ready Stok',
+        image: validPng,
+      },
+    ],
+  });
+
+  assert.equal(created.whatsapp, '081322001122');
+  assert.equal(created.whatsappAutoMessage, 'Halo {usaha}, mau pesan {menu} ya.');
+  assert.deepEqual(created.socialLinks, {
+    instagram: 'https://instagram.com/warungsambal.cisaga',
+    tiktok: 'https://www.tiktok.com/@warungsambal',
+  });
+  assert.equal(created.image, validPng);
+  assert.equal(created.variants[0].image, validPng);
+
+  const cleared = updateAdminListingEntry(created, {
+    businessName: created.businessName,
+    ownerName: created.ownerName,
+    productName: created.productName,
+    category: created.category,
+    village: created.village,
+    whatsapp: '085299887766',
+    whatsappAutoMessage: '',
+    socialLinks: {
+      instagram: '',
+      tiktok: '',
+      facebook: 'warungsambal.cisaga',
+    },
+    tier: 'reguler',
+    status: 'Aktif',
+    price: '27000',
+    unitLabel: 'Toples 200g',
+    shortDescription: created.shortDescription,
+    image: validPng,
+    variants: created.variants.map((v) => ({
+      id: v.id,
+      label: v.label,
+      price: '27000',
+      availabilityNote: v.availabilityNote,
+      image: v.image,
+    })),
+  });
+
+  assert.equal(cleared.whatsapp, '085299887766');
+  assert.equal(cleared.whatsappAutoMessage, '');
+  assert.deepEqual(cleared.socialLinks, {
+    facebook: 'https://www.facebook.com/warungsambal.cisaga',
+  });
+});
+
+test('admin photo options default to empty and support add, edit, delete, persistence, and safe upload paths', () => {
+  const store = new Map<string, string>();
+  const mockStorage = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => {
+      store.set(k, v);
+    },
+  };
+
+  // Defaults to empty array (no forced hardcoded presets)
+  assert.deepEqual(loadAdminPhotoOptions(mockStorage), []);
+
+  // Rejects unsafe/external URLs
+  const badUrl = addAdminPhotoOption([], 'Opsi Bahaya', 'javascript:alert(1)');
+  assert.ok(badUrl.error);
+  assert.equal(badUrl.options.length, 0);
+  assert.equal(isSafeUmkmImagePath('https://evil.example/x.png'), false);
+
+  // Accepts safe uploaded raster path
+  const added = addAdminPhotoOption([], 'Foto Toko Utama', '/uploads/umkm-101-toko.jpg');
+  assert.equal(added.error, undefined);
+  assert.equal(added.options.length, 1);
+  assert.equal(added.options[0].label, 'Foto Toko Utama');
+
+  // Edit existing option label & uploaded photo path
+  const edited = updateAdminPhotoOption(
+    added.options,
+    added.options[0].id,
+    'Foto Etalase Baru',
+    '/uploads/umkm-102-etalase.webp'
+  );
+  assert.equal(edited.error, undefined);
+  assert.equal(edited.options[0].label, 'Foto Etalase Baru');
+  assert.equal(edited.options[0].url, '/uploads/umkm-102-etalase.webp');
+
+  saveAdminPhotoOptions(edited.options, mockStorage);
+  assert.equal(loadAdminPhotoOptions(mockStorage).length, 1);
+  assert.equal(loadAdminPhotoOptions(mockStorage)[0].label, 'Foto Etalase Baru');
+
+  // Delete option returns empty list
+  const remaining = deleteAdminPhotoOption(edited.options, edited.options[0].id);
+  assert.deepEqual(remaining, []);
+
+  // Empty image stays empty when creating or clearing a listing
+  const createdEmpty = createAdminListingEntry({
+    businessName: 'Usaha Tanpa Foto',
+    ownerName: 'Pak Budi',
+    productName: 'Jasa Jahit Cisaga',
+    category: 'Busana',
+    village: 'Desa Cisaga',
+    whatsapp: '081234567890',
+    tier: 'reguler',
+    status: 'Aktif',
+    price: '35000',
+    unitLabel: 'Per Potong',
+    shortDescription: 'Layanan jahit pakaian rapi dan cepat di Desa Cisaga.',
+    image: '',
+  });
+  assert.equal(createdEmpty.image, '');
+
+  const invalidImageForm = validateAdminUmkmForm({
+    businessName: 'Usaha Valid',
+    ownerName: 'Pak Valid',
+    productName: 'Produk Valid',
+    category: 'Kuliner',
+    village: 'Desa Cisaga',
+    whatsapp: '081234567890',
+    tier: 'reguler',
+    status: 'Aktif',
+    price: '15000',
+    unitLabel: 'Porsi',
+    shortDescription: 'Deskripsi produk minimal sepuluh karakter aman.',
+    image: 'javascript:alert(1)',
+  });
+  assert.ok(invalidImageForm.image);
+});
 

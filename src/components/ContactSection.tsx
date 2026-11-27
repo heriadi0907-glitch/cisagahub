@@ -64,24 +64,24 @@ export function ContactSection({ onSubmitContactMessage }: ContactSectionProps) 
     <section
       id="hubungi-kami"
       data-testid="contact-section"
-      className="scroll-mt-16 py-14 sm:py-20 bg-[#F8FAFC] border-t border-[#E2E8F0]"
+      className="scroll-mt-14 py-7 sm:py-9 bg-[#F8FAFC] border-t border-[#E2E8F0]"
     >
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
         <div className="lg:col-span-5">
-          <p className="text-xs font-semibold text-[#C2410C] mb-2">
+          <p className="text-xs font-semibold text-[#C2410C] mb-1">
             Hubungi Saya · Langsung ke Web Portal Admin
           </p>
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0F2744] tracking-tight text-balance mb-3">
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0F2744] tracking-tight text-balance mb-2">
             Kirim Pesan Langsung ke Portal Admin
           </h2>
-          <p className="text-sm sm:text-base text-[#475569] leading-relaxed mb-6">
+          <p className="text-sm text-[#475569] leading-relaxed mb-4">
             Punya pertanyaan seputar promosi UMKM Premium, kerja sama reseller, pendampingan
             pendaftaran, atau masukan platform? Pesan Anda masuk langsung ke kotak masuk Panel Admin
             CISAGA HUB untuk ditindaklanjuti.
           </p>
 
-          <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 space-y-4">
-            <div className="flex items-start gap-3">
+          <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 space-y-3">
+            <div className="flex items-start gap-2.5">
               <MapPin className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" aria-hidden="true" />
               <div>
                 <p className="text-xs font-semibold text-[#0F2744]">Sekretariat CISAGA HUB</p>
@@ -91,7 +91,7 @@ export function ContactSection({ onSubmitContactMessage }: ContactSectionProps) 
               </div>
             </div>
 
-            <div className="flex items-start gap-3 pt-3 border-t border-[#E2E8F0]">
+            <div className="flex items-start gap-2.5 pt-2.5 border-t border-[#E2E8F0]">
               <Clock className="w-4 h-4 text-[#0F2744] shrink-0 mt-0.5" aria-hidden="true" />
               <div>
                 <p className="text-xs font-semibold text-[#0F2744]">Jam Layanan Pengelola</p>
@@ -101,7 +101,7 @@ export function ContactSection({ onSubmitContactMessage }: ContactSectionProps) 
               </div>
             </div>
 
-            <div className="flex items-start gap-3 pt-3 border-t border-[#E2E8F0]">
+            <div className="flex items-start gap-2.5 pt-2.5 border-t border-[#E2E8F0]">
               <Mail className="w-4 h-4 text-[#0F2744] shrink-0 mt-0.5" aria-hidden="true" />
               <div>
                 <p className="text-xs font-semibold text-[#0F2744]">Email Sekretariat</p>
@@ -111,7 +111,7 @@ export function ContactSection({ onSubmitContactMessage }: ContactSectionProps) 
           </div>
         </div>
 
-        <div className="lg:col-span-7 bg-white border border-[#E2E8F0] rounded-xl p-6 sm:p-8">
+        <div className="lg:col-span-7 bg-white border border-[#E2E8F0] rounded-xl p-5 sm:p-6">
           {sentMessage ? (
             <div data-testid="contact-success-card" className="space-y-4">
               <div className="flex items-center gap-2.5 text-[#047857]">
@@ -159,12 +159,12 @@ export function ContactSection({ onSubmitContactMessage }: ContactSectionProps) 
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} noValidate className="space-y-4">
-              <div className="mb-2">
-                <h3 className="font-display text-xl font-bold text-[#0F2744]">
+            <form onSubmit={handleSubmit} noValidate className="space-y-3">
+              <div className="mb-1">
+                <h3 className="font-display text-lg sm:text-xl font-bold text-[#0F2744]">
                   Formulir Hubungi Saya
                 </h3>
-                <p className="text-xs text-[#475569] mt-1">
+                <p className="text-xs text-[#475569] mt-0.5">
                   Isi formulir berikut agar pesan Anda langsung tersimpan dan diteruskan ke Panel
                   Admin.
                 </p>
@@ -193,11 +193,11 @@ export function ContactSection({ onSubmitContactMessage }: ContactSectionProps) 
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label
                     htmlFor="contact-name"
-                    className="block text-xs font-semibold text-[#0F2744] mb-1.5"
+                    className="block text-xs font-semibold text-[#0F2744] mb-1"
                   >
                     Nama Lengkap <span className="text-[#C2410C]">*</span>
                   </label>
@@ -212,7 +212,7 @@ export function ContactSection({ onSubmitContactMessage }: ContactSectionProps) 
                       if (submitError) setSubmitError(null);
                     }}
                     placeholder="Nama lengkap Anda"
-                    className="w-full px-3.5 py-2.5 text-sm bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
+                    className="w-full px-3 py-2 text-sm bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
                   />
                   {errors.name && <p className="text-xs text-[#B91C1C] mt-1">{errors.name}</p>}
                 </div>
@@ -220,7 +220,7 @@ export function ContactSection({ onSubmitContactMessage }: ContactSectionProps) 
                 <div>
                   <label
                     htmlFor="contact-email"
-                    className="block text-xs font-semibold text-[#0F2744] mb-1.5"
+                    className="block text-xs font-semibold text-[#0F2744] mb-1"
                   >
                     Email <span className="text-[#C2410C]">*</span>
                   </label>
@@ -235,17 +235,17 @@ export function ContactSection({ onSubmitContactMessage }: ContactSectionProps) 
                       if (submitError) setSubmitError(null);
                     }}
                     placeholder="nama@contoh.id"
-                    className="w-full px-3.5 py-2.5 text-sm bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
+                    className="w-full px-3 py-2 text-sm bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
                   />
                   {errors.email && <p className="text-xs text-[#B91C1C] mt-1">{errors.email}</p>}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label
                     htmlFor="contact-whatsapp"
-                    className="block text-xs font-semibold text-[#0F2744] mb-1.5"
+                    className="block text-xs font-semibold text-[#0F2744] mb-1"
                   >
                     Nomor WhatsApp (Opsional)
                   </label>
@@ -259,7 +259,7 @@ export function ContactSection({ onSubmitContactMessage }: ContactSectionProps) 
                       if (submitError) setSubmitError(null);
                     }}
                     placeholder="081234567890"
-                    className="w-full px-3.5 py-2.5 text-sm font-mono bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
+                    className="w-full px-3 py-2 text-sm font-mono bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
                   />
                   {errors.whatsapp && (
                     <p className="text-xs text-[#B91C1C] mt-1">{errors.whatsapp}</p>
@@ -269,7 +269,7 @@ export function ContactSection({ onSubmitContactMessage }: ContactSectionProps) 
                 <div>
                   <label
                     htmlFor="contact-subject"
-                    className="block text-xs font-semibold text-[#0F2744] mb-1.5"
+                    className="block text-xs font-semibold text-[#0F2744] mb-1"
                   >
                     Subjek Pesan <span className="text-[#C2410C]">*</span>
                   </label>
@@ -286,7 +286,7 @@ export function ContactSection({ onSubmitContactMessage }: ContactSectionProps) 
                       if (submitError) setSubmitError(null);
                     }}
                     placeholder="Contoh: Pertanyaan Umum / Promosi UMKM"
-                    className="w-full px-3.5 py-2.5 text-sm bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
+                    className="w-full px-3 py-2 text-sm bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
                   />
                   <datalist id="contact-subject-suggestions">
                     {CONTACT_TOPICS.map((topic) => (
@@ -300,7 +300,7 @@ export function ContactSection({ onSubmitContactMessage }: ContactSectionProps) 
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between mb-1">
                   <label
                     htmlFor="contact-message"
                     className="block text-xs font-semibold text-[#0F2744]"
@@ -313,7 +313,7 @@ export function ContactSection({ onSubmitContactMessage }: ContactSectionProps) 
                 </div>
                 <textarea
                   id="contact-message"
-                  rows={4}
+                  rows={3}
                   required
                   maxLength={1500}
                   value={form.message}
@@ -323,7 +323,7 @@ export function ContactSection({ onSubmitContactMessage }: ContactSectionProps) 
                     if (submitError) setSubmitError(null);
                   }}
                   placeholder="Tuliskan pertanyaan, kebutuhan kemitraan, atau pesan Anda untuk admin CISAGA HUB..."
-                  className="w-full px-3.5 py-2.5 text-sm bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
+                  className="w-full px-3 py-2 text-sm bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:bg-white focus:border-[#0F2744] focus:ring-1 focus:ring-[#0F2744]"
                 />
                 {errors.message && (
                   <p className="text-xs text-[#B91C1C] mt-1">{errors.message}</p>

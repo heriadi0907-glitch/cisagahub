@@ -11,7 +11,6 @@ import {
   verifySessionToken,
 } from './authUtils.ts';
 import { createServerStore, resolveWritableDataDir } from './store.ts';
-import { INITIAL_UMKM_LISTINGS } from '../src/data/cisagaData.ts';
 
 test('scrypt password hashing and verification succeed only for matching password', () => {
   const hashed = hashPassword('CisagaDev#2026');
@@ -86,12 +85,12 @@ test('server store handles one-time developer setup, login verification, and env
   }
 });
 
-test('server store enforces public active filtering vs admin CRUD operations', () => {
+test('server store starts empty and enforces public active filtering vs admin CRUD operations', () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hera-store-test-'));
-  const initialCount = INITIAL_UMKM_LISTINGS.length;
   try {
     const store = createServerStore(tempDir);
-    assert.equal(store.getPublicActiveListings().length, initialCount);
+    assert.equal(store.getAllListings().length, 0);
+    assert.equal(store.getPublicActiveListings().length, 0);
 
     // Public free registration creates Reguler + Menunggu Verifikasi (hidden from public until admin activates)
     const pendingFree = store.createFreeRegistration({
@@ -105,20 +104,20 @@ test('server store enforces public active filtering vs admin CRUD operations', (
     });
     assert.equal(pendingFree.tier, 'reguler');
     assert.equal(pendingFree.status, 'Menunggu Verifikasi');
-    assert.equal(store.getAllListings().length, initialCount + 1);
-    assert.equal(store.getPublicActiveListings().length, initialCount);
+    assert.equal(store.getAllListings().length, 1);
+    assert.equal(store.getPublicActiveListings().length, 0);
 
     // Admin activates pending free listing and upgrades to premium
     const activated = store.cycleStatus(pendingFree.id);
     assert.equal(activated.status, 'Aktif');
-    assert.equal(store.getPublicActiveListings().length, initialCount + 1);
+    assert.equal(store.getPublicActiveListings().length, 1);
 
     const promoted = store.toggleTier(pendingFree.id);
     assert.equal(promoted.tier, 'premium');
 
     // Admin deletes listing
     store.deleteListing(pendingFree.id);
-    assert.equal(store.getAllListings().length, initialCount);
+    assert.equal(store.getAllListings().length, 0);
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
@@ -126,7 +125,6 @@ test('server store enforces public active filtering vs admin CRUD operations', (
 
 test('server store preserves registered UMKM data while migrating built-in HERA seed name to CISAGA HUB', () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cisagahub-migrate-test-'));
-  const initialCount = INITIAL_UMKM_LISTINGS.length;
   try {
     const seedStore = createServerStore(tempDir);
     const customListing = seedStore.createFreeRegistration({
@@ -139,22 +137,21 @@ test('server store preserves registered UMKM data while migrating built-in HERA 
       estimatedPrice: '65000',
     });
 
-    // Simulate legacy persisted seed brand name on built-in entry
+    // Simulate legacy persisted seed brand name on built-in entry alongside custom listing
     const listingsFile = path.join(tempDir, 'umkm-listings.json');
-    const saved = JSON.parse(fs.readFileSync(listingsFile, 'utf8')) as Array<{
-      id: string;
-      businessName: string;
-    }>;
-    const updatedSeed = saved.map((item) =>
-      item.id === 'hampers-karya-cisaga'
-        ? { ...item, businessName: 'Sentra Promosi HERA Cisaga' }
-        : item
-    );
-    fs.writeFileSync(listingsFile, JSON.stringify(updatedSeed, null, 2), 'utf8');
+    const saved = JSON.parse(fs.readFileSync(listingsFile, 'utf8')) as Array<Record<string, unknown>>;
+    const legacySeedRecord = {
+      ...customListing,
+      id: 'hampers-karya-cisaga',
+      businessName: 'Sentra Promosi HERA Cisaga',
+      status: 'Aktif',
+      tier: 'premium',
+    };
+    fs.writeFileSync(listingsFile, JSON.stringify([...saved, legacySeedRecord], null, 2), 'utf8');
 
     const reloadedStore = createServerStore(tempDir);
     const allListings = reloadedStore.getAllListings();
-    assert.equal(allListings.length, initialCount + 1);
+    assert.equal(allListings.length, 2);
     assert.equal(
       allListings.find((i) => i.id === 'hampers-karya-cisaga')?.businessName,
       'Sentra Promosi CISAGA HUB'
@@ -268,6 +265,92 @@ test('server store persists uploaded photo paths, gallery images, and menu/servi
   }
 });
 
+test('server store persists and sanitizes whatsappAutoMessage and socialLinks across create and update', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cisaga-social-autochat-test-'));
+  try {
+    const store = createServerStore(tempDir);
+
+    assert.throws(
+      () =>
+        store.createAdminListing({
+          businessName: 'Kedai Uji Cisaga',
+          ownerName: 'Kang Uji',
+          productName: 'Kopi Uji',
+          category: 'Kuliner',
+          village: 'Desa Cisaga',
+          whatsapp: '081234567890',
+          tier: 'reguler',
+          status: 'Aktif',
+          price: '15000',
+          unitLabel: 'Gelas',
+          shortDescription: 'Kedai uji coba validasi tautan sosial media berbahaya.',
+          image: '',
+          socialLinks: {
+            instagram: 'javascript:alert(1)',
+          },
+        }),
+      /tidak aman/
+    );
+
+    const created = store.createAdminListing({
+      businessName: 'Baso Mang Ujang',
+      ownerName: 'Mang Ujang',
+      productName: 'Baso Urat Cisaga',
+      category: 'Kuliner',
+      village: 'Desa Cisaga',
+      whatsapp: '0812-8899-0011',
+      whatsappAutoMessage: '<b>Halo</b> {usaha}, mau pesan {menu} di {desa}!',
+      socialLinks: {
+        instagram: '@baso_mangujang',
+        tiktok: '@basomangujang.id',
+        website: 'basoujang.id',
+      },
+      tier: 'premium',
+      status: 'Aktif',
+      price: '20000',
+      unitLabel: 'Porsi Biasa',
+      shortDescription: 'Baso urat daging sapi asli dengan kuah kaldu gurih khas Cisaga.',
+      image: '',
+    });
+
+    assert.equal(created.whatsapp, '081288990011');
+    assert.equal(created.whatsappAutoMessage, 'Halo {usaha}, mau pesan {menu} di {desa}!');
+    assert.deepEqual(created.socialLinks, {
+      instagram: 'https://instagram.com/baso_mangujang',
+      tiktok: 'https://www.tiktok.com/@basomangujang.id',
+      website: 'https://basoujang.id/',
+    });
+
+    const updated = store.updateAdminListing(created.id, {
+      businessName: created.businessName,
+      ownerName: created.ownerName,
+      productName: created.productName,
+      category: created.category,
+      village: created.village,
+      whatsapp: '085311223344',
+      whatsappAutoMessage: '',
+      socialLinks: {
+        instagram: '',
+        facebook: 'https://www.facebook.com/basomangujang',
+      },
+      tier: created.tier,
+      status: created.status,
+      price: '22000',
+      unitLabel: 'Porsi Spesial',
+      shortDescription: created.shortDescription,
+      image: created.image,
+    });
+
+    assert.equal(updated.whatsapp, '085311223344');
+    assert.equal(updated.whatsappAutoMessage, '');
+    assert.deepEqual(updated.socialLinks, {
+      facebook: 'https://www.facebook.com/basomangujang',
+    });
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
 test('server store creates, sanitizes, sorts, updates status (unread/read/replied), and deletes contacts safely', () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cisaga-contact-test-'));
   try {
@@ -371,8 +454,23 @@ test('resolveWritableDataDir falls back to writable directory when preferred pat
     assert.equal(resolved, fallbackDir);
     assert.equal(fs.existsSync(fallbackDir), true);
 
-    const store = createServerStore(blockedPreferred);
-    assert.ok(store.getPublicActiveListings().length >= 6);
+    const store = createServerStore(blockedPreferred, fallbackDir);
+    assert.equal(store.getPublicActiveListings().length, 0);
+    store.createAdminListing({
+      businessName: 'Warung Kopi Cisaga',
+      ownerName: 'Kang Dedi',
+      productName: 'Kopi Robusta',
+      category: 'Kuliner',
+      village: 'Desa Cisaga',
+      whatsapp: '081234567890',
+      tier: 'reguler',
+      status: 'Aktif',
+      price: '15000',
+      unitLabel: 'Gelas',
+      shortDescription: 'Kopi lokal berkualitas dari Kecamatan Cisaga.',
+      image: '',
+    });
+    assert.equal(store.getPublicActiveListings().length, 1);
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }

@@ -2,6 +2,7 @@ import { Bookmark, CheckCircle2, MessageCircle, Trash2, X } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import type { InquiryReceipt, PromoInquiryFormData, SavedPromoItem } from '../types/umkm';
 import {
+  buildUmkmAutoChatMessage,
   buildWhatsAppUrl,
   formatRupiah,
   generateInquiryCode,
@@ -229,7 +230,16 @@ export function SavedPromoDrawer({
                         <a
                           href={buildWhatsAppUrl(
                             item.whatsapp,
-                            `Halo ${item.businessName}, saya tertarik dengan produk "${item.productName}" dari etalase CISAGA HUB Cisaga.`
+                            buildUmkmAutoChatMessage(
+                              {
+                                businessName: item.businessName,
+                                productName: item.productName,
+                                village: item.village,
+                                unitLabel: item.variantLabel,
+                                whatsappAutoMessage: item.whatsappAutoMessage,
+                              },
+                              item.variantLabel
+                            )
                           )}
                           target="_blank"
                           rel="noopener noreferrer"

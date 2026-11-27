@@ -91,29 +91,29 @@ export function AdminTestimonialsTab({
   };
 
   return (
-    <div data-testid="admin-testimonials-view" className="space-y-6">
+    <div data-testid="admin-testimonials-view" className="space-y-4">
       {/* KPI Strip */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div className="bg-white border border-[#E2E8F0] rounded-xl p-5">
-          <p className="text-xs text-[#475569] mb-1">Total Testimoni</p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-3.5">
+          <p className="text-xs text-[#475569] mb-0.5">Total Testimoni</p>
           <p className="font-mono tabular-nums text-2xl font-semibold text-[#0F2744]">
             {stats.total}
           </p>
         </div>
-        <div className="bg-white border border-[#E2E8F0] rounded-xl p-5">
-          <p className="text-xs text-[#475569] mb-1">Tayang di Beranda</p>
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-3.5">
+          <p className="text-xs text-[#475569] mb-0.5">Tayang di Beranda</p>
           <p className="font-mono tabular-nums text-2xl font-semibold text-[#047857]">
             {stats.publishedCount}
           </p>
         </div>
-        <div className="bg-white border border-[#E2E8F0] rounded-xl p-5">
-          <p className="text-xs text-[#475569] mb-1">Disembunyikan</p>
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-3.5">
+          <p className="text-xs text-[#475569] mb-0.5">Disembunyikan</p>
           <p className="font-mono tabular-nums text-2xl font-semibold text-[#475569]">
             {stats.total - stats.publishedCount}
           </p>
         </div>
-        <div className="bg-white border border-[#E2E8F0] rounded-xl p-5">
-          <p className="text-xs text-[#475569] mb-1">Rata-Rata Rating</p>
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-3.5">
+          <p className="text-xs text-[#475569] mb-0.5">Rata-Rata Rating</p>
           <p className="font-mono tabular-nums text-2xl font-semibold text-[#EA580C]">
             {stats.publishedCount > 0 ? `${stats.averageRating.toFixed(1)} / 5.0` : '0.0'}
           </p>
@@ -121,7 +121,7 @@ export function AdminTestimonialsTab({
       </div>
 
       {/* Header + Add CTA */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-[#E2E8F0] rounded-xl p-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-[#E2E8F0] rounded-xl p-4">
         <div>
           <h2 className="font-display text-lg font-bold text-[#0F2744]">
             Kelola Testimoni Pelanggan
@@ -135,7 +135,7 @@ export function AdminTestimonialsTab({
           type="button"
           data-testid="admin-add-testimonial-btn"
           onClick={handleOpenForm}
-          className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#EA580C] hover:bg-[#C2410C] rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#EA580C] hover:bg-[#C2410C] rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
         >
           <Plus className="w-4 h-4" aria-hidden="true" />
           <span>Tambah Testimoni</span>
@@ -146,9 +146,9 @@ export function AdminTestimonialsTab({
       {isFormOpen && (
         <div
           data-testid="admin-testimonial-form-panel"
-          className="bg-white border border-[#0F2744] rounded-xl p-6 sm:p-7"
+          className="bg-white border border-[#0F2744] rounded-xl p-4 sm:p-5"
         >
-          <div className="flex items-center justify-between gap-4 pb-4 mb-5 border-b border-[#E2E8F0]">
+          <div className="flex items-center justify-between gap-3 pb-3 mb-3.5 border-b border-[#E2E8F0]">
             <div>
               <h3 className="font-display text-xl font-bold text-[#0F2744]">
                 Tambah Ulasan Pembeli Baru
@@ -171,7 +171,7 @@ export function AdminTestimonialsTab({
             data-testid="admin-testimonial-form"
             onSubmit={handleSubmit}
             noValidate
-            className="space-y-4"
+            className="space-y-3"
           >
             {submitError && (
               <div
@@ -182,7 +182,7 @@ export function AdminTestimonialsTab({
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label
                   htmlFor="testi-umkm-id"
@@ -194,7 +194,7 @@ export function AdminTestimonialsTab({
                   id="testi-umkm-id"
                   value={form.umkmId}
                   onChange={(e) => handleSelectUmkm(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm bg-white border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:border-[#0F2744]"
+                  className="w-full px-2.5 py-2 text-sm bg-white border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:border-[#0F2744]"
                 >
                   <option value="">Pilih UMKM...</option>
                   {listings.map((item) => (
@@ -203,6 +203,11 @@ export function AdminTestimonialsTab({
                     </option>
                   ))}
                 </select>
+                {listings.length === 0 && (
+                  <p className="text-xs text-[#64748B] mt-1">
+                    Belum ada UMKM terdaftar. Tambahkan UMKM terlebih dahulu di tab Data UMKM.
+                  </p>
+                )}
                 {errors.umkmId && (
                   <p className="text-xs text-[#B91C1C] mt-1">{errors.umkmId}</p>
                 )}
@@ -211,7 +216,7 @@ export function AdminTestimonialsTab({
               <div>
                 <label
                   htmlFor="testi-product"
-                  className="block text-xs font-semibold text-[#0F2744] mb-1.5"
+                  className="block text-xs font-semibold text-[#0F2744] mb-1"
                 >
                   Produk yang Dibeli (Opsional)
                 </label>
@@ -222,14 +227,14 @@ export function AdminTestimonialsTab({
                   value={form.productPurchased}
                   onChange={(e) => setForm({ ...form, productPurchased: e.target.value })}
                   placeholder="Contoh: Gula Aren Semut 500g"
-                  className="w-full px-3 py-2.5 text-sm bg-white border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:border-[#0F2744]"
+                  className="w-full px-2.5 py-2 text-sm bg-white border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:border-[#0F2744]"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="testi-customer-name"
-                  className="block text-xs font-semibold text-[#0F2744] mb-1.5"
+                  className="block text-xs font-semibold text-[#0F2744] mb-1"
                 >
                   Nama Pembeli *
                 </label>
@@ -243,7 +248,7 @@ export function AdminTestimonialsTab({
                     setErrors((prev) => ({ ...prev, customerName: undefined }));
                   }}
                   placeholder="Contoh: Rizky Pratama"
-                  className="w-full px-3 py-2.5 text-sm bg-white border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:border-[#0F2744]"
+                  className="w-full px-2.5 py-2 text-sm bg-white border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:border-[#0F2744]"
                 />
                 {errors.customerName && (
                   <p className="text-xs text-[#B91C1C] mt-1">{errors.customerName}</p>
@@ -253,7 +258,7 @@ export function AdminTestimonialsTab({
               <div>
                 <label
                   htmlFor="testi-customer-role"
-                  className="block text-xs font-semibold text-[#0F2744] mb-1.5"
+                  className="block text-xs font-semibold text-[#0F2744] mb-1"
                 >
                   Keterangan / Asal Pembeli *
                 </label>
@@ -267,7 +272,7 @@ export function AdminTestimonialsTab({
                     setErrors((prev) => ({ ...prev, customerRole: undefined }));
                   }}
                   placeholder="Contoh: Pelanggan Oleh-Oleh · Ciamis"
-                  className="w-full px-3 py-2.5 text-sm bg-white border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:border-[#0F2744]"
+                  className="w-full px-2.5 py-2 text-sm bg-white border border-[#E2E8F0] rounded-lg text-[#0F2744] focus:outline-none focus:border-[#0F2744]"
                 />
                 {errors.customerRole && (
                   <p className="text-xs text-[#B91C1C] mt-1">{errors.customerRole}</p>
@@ -372,7 +377,7 @@ export function AdminTestimonialsTab({
         className="bg-white border border-[#E2E8F0] rounded-xl overflow-hidden"
       >
         {testimonials.length === 0 ? (
-          <div className="p-10 text-center space-y-3">
+          <div className="p-6 text-center space-y-2.5">
             <MessageSquareQuote className="w-8 h-8 text-[#94A3B8] mx-auto" aria-hidden="true" />
             <p className="font-display text-lg font-bold text-[#0F2744]">
               Belum ada testimoni pelanggan
@@ -388,7 +393,7 @@ export function AdminTestimonialsTab({
               <div
                 key={item.id}
                 data-testid={`admin-testimonial-row-${item.id}`}
-                className="p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-[#F8FAFC]/70 transition-colors"
+                className="p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3 hover:bg-[#F8FAFC]/70 transition-colors"
               >
                 <div className="space-y-2 min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2.5">

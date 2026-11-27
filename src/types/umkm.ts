@@ -8,6 +8,15 @@ export type UmkmStatus = 'Aktif' | 'Menunggu Verifikasi' | 'Nonaktif';
 
 export type SortOption = 'featured' | 'price-asc' | 'price-desc';
 
+export type SocialPlatform = 'instagram' | 'facebook' | 'tiktok' | 'website';
+
+export interface UmkmSocialLinks {
+  instagram?: string;
+  facebook?: string;
+  tiktok?: string;
+  website?: string;
+}
+
 export interface ProductVariant {
   id: string;
   label: string;
@@ -24,6 +33,8 @@ export interface UmkmListing {
   category: BusinessCategory;
   village: string;
   whatsapp: string;
+  whatsappAutoMessage?: string;
+  socialLinks?: UmkmSocialLinks;
   tier: UmkmTier;
   status: UmkmStatus;
   price: number;
@@ -51,6 +62,7 @@ export interface SavedPromoItem {
   variantLabel: string;
   businessName: string;
   whatsapp: string;
+  whatsappAutoMessage?: string;
   village: string;
   tier: UmkmTier;
   estimatedPrice: number;
@@ -93,6 +105,8 @@ export interface AdminUmkmFormData {
   category: BusinessCategory;
   village: string;
   whatsapp: string;
+  whatsappAutoMessage?: string;
+  socialLinks?: UmkmSocialLinks;
   tier: UmkmTier;
   status: UmkmStatus;
   price: string;

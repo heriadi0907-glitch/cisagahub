@@ -24,19 +24,19 @@ export function AdminLoginView({
   return (
     <section
       data-testid="admin-login-view"
-      className="py-12 sm:py-16 max-w-[1200px] mx-auto px-4 sm:px-6"
+      className="py-8 sm:py-10 max-w-[1200px] mx-auto px-4 sm:px-6"
     >
-      <div className="max-w-[460px] mx-auto bg-white border border-[#E2E8F0] rounded-xl p-6 sm:p-8">
-        <div className="flex items-center gap-2 text-xs font-semibold text-[#C2410C] mb-2">
+      <div className="max-w-[460px] mx-auto bg-white border border-[#E2E8F0] rounded-xl p-5 sm:p-6">
+        <div className="flex items-center gap-2 text-xs font-semibold text-[#C2410C] mb-1.5">
           <ShieldCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
           <span>CISAGA HUB · Akses Khusus Admin</span>
         </div>
 
-        <h1 className="font-display text-2xl font-bold text-[#0F2744] tracking-tight mb-2">
+        <h1 className="font-display text-2xl font-bold text-[#0F2744] tracking-tight mb-1.5">
           Masuk Panel Admin CISAGA HUB
         </h1>
 
-        <p className="text-sm text-[#475569] leading-relaxed mb-5">
+        <p className="text-sm text-[#475569] leading-relaxed mb-4">
           {isLoading
             ? 'Memeriksa sesi autentikasi Panel Admin...'
             : isUnauthorizedUser && signedInEmail
@@ -48,14 +48,14 @@ export function AdminLoginView({
           <div
             role="alert"
             data-testid="admin-auth-error"
-            className="mb-5 p-3.5 rounded-lg bg-[#B91C1C]/5 border border-[#B91C1C]/30 text-xs font-medium text-[#B91C1C] leading-relaxed"
+            className="mb-4 p-3 rounded-lg bg-[#B91C1C]/5 border border-[#B91C1C]/30 text-xs font-medium text-[#B91C1C] leading-relaxed"
           >
             {errorMessage}
           </div>
         )}
 
         {!isLoading && (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {isUnauthorizedUser && signedInEmail ? (
               <button
                 type="button"

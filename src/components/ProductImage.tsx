@@ -20,15 +20,17 @@ export function ProductImage({
     setHasError(false);
   }, [src]);
 
-  if (hasError) {
+  const hasSource = typeof src === 'string' && src.trim().length > 0;
+
+  if (!hasSource || hasError) {
     return (
       <div
         role="img"
         aria-label={alt}
-        className="w-full h-full bg-gradient-to-br from-[#F1F5F9] to-[#E2E8F0] flex flex-col items-center justify-center p-6 text-center text-[#475569]"
+        className="w-full h-full bg-gradient-to-br from-[#F1F5F9] to-[#E2E8F0] flex flex-col items-center justify-center p-3 text-center text-[#64748B]"
       >
-        <Package className="w-8 h-8 mb-2 text-[#0F2744]" strokeWidth={1.5} aria-hidden="true" />
-        <span className="text-xs font-medium tracking-tight max-w-[180px]">
+        <Package className="w-6 h-6 mb-1 text-[#0F2744]" strokeWidth={1.5} aria-hidden="true" />
+        <span className="text-[11px] font-medium tracking-tight max-w-[160px] line-clamp-2">
           {fallbackTitle ?? alt}
         </span>
       </div>

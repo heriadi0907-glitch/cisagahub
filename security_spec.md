@@ -2,7 +2,7 @@
 
 ## 1. Data Invariants
 - `/contacts/{contactId}` contains visitor PII (`name`, `email`, `whatsapp`, `message`) and MUST only be readable (`get`, `list`), updatable (`status`), and deletable by verified admins. Public visitors may only `create` new messages with `status == 'unread'` and `created_at == request.time`.
-- `/umkm_listings/{listingId}` allows public `get`/`list` ONLY for documents where `status == 'Aktif'`. Public visitors may `create` new free registrations ONLY with `tier == 'reguler'`, `status == 'Menunggu Verifikasi'`, and `serverCreatedAt == request.time`. Only verified admins may create/read non-active listings, update listings, toggle tier/status, or delete listings.
+- `/umkm_listings/{listingId}` allows public `get`/`list` ONLY for documents where `status == 'Aktif'`. Public visitors may `create` new free registrations ONLY with `tier == 'reguler'`, `status == 'Menunggu Verifikasi'`, and `serverCreatedAt == request.time`. Only verified admins may create/read non-active listings, update listings (including optional `whatsappAutoMessage <= 500` chars and safe `https?://` `socialLinks` map), toggle tier/status, or delete listings.
 - `/admins/{userId}` is locked (`allow read, write: if false`) so only the strictly allowlisted verified admin Google accounts (`herzz@smkn2banjar-jabar.sch.id` and `heriadi0907@gmail.com`) can ever hold admin access.
 - `/testimonials/{testimonialId}` allows public `get`/`list` ONLY for documents where `isPublished == true`. Only verified admins may create, update, toggle publication, or delete testimonials.
 - All unmatched paths are explicitly denied (`allow read, write: if false`).
