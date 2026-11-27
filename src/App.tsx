@@ -560,6 +560,7 @@ export default function App() {
 
             <CatalogSection
               listings={filteredCatalogListings}
+              allActiveListings={publicListings}
               totalActiveCount={publicListings.length}
               savedItems={savedItems}
               selectedCategory={selectedCategory}

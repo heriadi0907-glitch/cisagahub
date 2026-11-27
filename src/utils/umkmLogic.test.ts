@@ -11,11 +11,13 @@ import {
   filterAndSortListings,
   formatRupiah,
   getAdminPortalSummary,
+  getCatalogInstantSuggestions,
   getListingAllImages,
   getMonthlyUmkmRegistrationTrend,
   getPremiumTopListings,
   getTestimonialStats,
   isDeveloperAdminPath,
+  splitTextByHighlight,
   toggleListingTier,
   updateAdminListingEntry,
   validateAdminUmkmForm,
@@ -506,6 +508,43 @@ test('validateTestimonialForm and getTestimonialStats validate inputs and comput
   assert.equal(stats.publishedCount, 2);
   assert.equal(stats.averageRating, 4.5);
 });
+
+test('getCatalogInstantSuggestions returns ranked live results by product, business, variant, and village', () => {
+  assert.deepEqual(getCatalogInstantSuggestions(INITIAL_UMKM_LISTINGS, '   '), []);
+
+  const gulaMatches = getCatalogInstantSuggestions(INITIAL_UMKM_LISTINGS, 'gula', 4);
+  assert.ok(gulaMatches.length >= 1);
+  assert.equal(gulaMatches[0].listing.id, 'gula-aren-bangunharja');
+  assert.equal(gulaMatches[0].matchField, 'Produk');
+
+  const villageMatches = getCatalogInstantSuggestions(INITIAL_UMKM_LISTINGS, 'Mekarmukti', 6);
+  assert.ok(villageMatches.length >= 1);
+  assert.ok(villageMatches.every((entry) => entry.listing.status === 'Aktif'));
+  assert.ok(villageMatches.some((entry) => entry.matchField === 'Desa'));
+
+  const limited = getCatalogInstantSuggestions(INITIAL_UMKM_LISTINGS, 'Desa', 2);
+  assert.equal(limited.length, 2);
+});
+
+test('splitTextByHighlight safely splits case-insensitive query matches without HTML', () => {
+  assert.deepEqual(splitTextByHighlight('Gula Aren Semut Asli', ''), [
+    { text: 'Gula Aren Semut Asli', highlight: false },
+  ]);
+
+  assert.deepEqual(splitTextByHighlight('Gula Aren Semut Asli', 'aren'), [
+    { text: 'Gula ', highlight: false },
+    { text: 'Aren', highlight: true },
+    { text: ' Semut Asli', highlight: false },
+  ]);
+
+  assert.deepEqual(splitTextByHighlight('Kopi Cisaga & Kopi Tubruk', 'kopi'), [
+    { text: 'Kopi', highlight: true },
+    { text: ' Cisaga & ', highlight: false },
+    { text: 'Kopi', highlight: true },
+    { text: ' Tubruk', highlight: false },
+  ]);
+});
+
 
 
 

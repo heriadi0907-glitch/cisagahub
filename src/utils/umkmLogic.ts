@@ -77,6 +77,19 @@ export interface ListingFilterParams {
   includeUnverified?: boolean;
 }
 
+function getListingQueryMatchRank(item: UmkmListing, normalizedQuery: string): number {
+  const productLower = item.productName.toLowerCase();
+  const businessLower = item.businessName.toLowerCase();
+  if (productLower.startsWith(normalizedQuery)) return 0;
+  if (businessLower.startsWith(normalizedQuery)) return 1;
+  if (productLower.includes(normalizedQuery)) return 2;
+  if (businessLower.includes(normalizedQuery)) return 3;
+  if (item.variants.some((v) => v.label.toLowerCase().includes(normalizedQuery))) return 4;
+  if (item.village.toLowerCase().includes(normalizedQuery)) return 5;
+  if (item.ownerName.toLowerCase().includes(normalizedQuery)) return 6;
+  return 7;
+}
+
 export function filterAndSortListings(
   listings: UmkmListing[],
   params: ListingFilterParams
@@ -112,8 +125,15 @@ export function filterAndSortListings(
     return [...filtered].sort((a, b) => getStartingPrice(b) - getStartingPrice(a));
   }
 
-  // Default 'featured' sort: Premium always appears first, Reguler after
+  // Default 'featured' sort: when searching, rank strong product/business matches first (tier breaks ties);
+  // when query is empty, Premium always appears first, Reguler after.
   return [...filtered].sort((a, b) => {
+    if (normalizedQuery !== '') {
+      const rankDiff =
+        getListingQueryMatchRank(a, normalizedQuery) -
+        getListingQueryMatchRank(b, normalizedQuery);
+      if (rankDiff !== 0) return rankDiff;
+    }
     if (a.tier === b.tier) return 0;
     return a.tier === 'premium' ? -1 : 1;
   });
@@ -771,4 +791,135 @@ export function getTestimonialStats(testimonials: CustomerTestimonial[]): Testim
     averageRating,
   };
 }
+
+export type CatalogMatchField =
+  | 'Produk'
+  | 'Usaha'
+  | 'Menu/Varian'
+  | 'Desa'
+  | 'Pemilik'
+  | 'Deskripsi';
+
+export interface CatalogInstantSuggestion {
+  listing: UmkmListing;
+  matchField: CatalogMatchField;
+  matchedLabel: string;
+}
+
+export function getCatalogInstantSuggestions(
+  listings: UmkmListing[],
+  query: string,
+  maxResults = 6
+): CatalogInstantSuggestion[] {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (normalizedQuery === '' || maxResults <= 0) {
+    return [];
+  }
+
+  const scored: { suggestion: CatalogInstantSuggestion; rank: number }[] = [];
+
+  for (const item of listings) {
+    if (item.status !== 'Aktif') continue;
+
+    const productLower = item.productName.toLowerCase();
+    const businessLower = item.businessName.toLowerCase();
+    const villageLower = item.village.toLowerCase();
+    const ownerLower = item.ownerName.toLowerCase();
+    const descLower = item.shortDescription.toLowerCase();
+    const matchedVariant = item.variants.find((v) =>
+      v.label.toLowerCase().includes(normalizedQuery)
+    );
+
+    let rank = -1;
+    let matchField: CatalogMatchField = 'Produk';
+    let matchedLabel = item.productName;
+
+    if (productLower.startsWith(normalizedQuery)) {
+      rank = 0;
+      matchField = 'Produk';
+      matchedLabel = item.productName;
+    } else if (businessLower.startsWith(normalizedQuery)) {
+      rank = 1;
+      matchField = 'Usaha';
+      matchedLabel = item.businessName;
+    } else if (productLower.includes(normalizedQuery)) {
+      rank = 2;
+      matchField = 'Produk';
+      matchedLabel = item.productName;
+    } else if (businessLower.includes(normalizedQuery)) {
+      rank = 3;
+      matchField = 'Usaha';
+      matchedLabel = item.businessName;
+    } else if (matchedVariant) {
+      rank = 4;
+      matchField = 'Menu/Varian';
+      matchedLabel = matchedVariant.label;
+    } else if (villageLower.includes(normalizedQuery)) {
+      rank = 5;
+      matchField = 'Desa';
+      matchedLabel = item.village;
+    } else if (ownerLower.includes(normalizedQuery)) {
+      rank = 6;
+      matchField = 'Pemilik';
+      matchedLabel = item.ownerName;
+    } else if (descLower.includes(normalizedQuery)) {
+      rank = 7;
+      matchField = 'Deskripsi';
+      matchedLabel = item.shortDescription;
+    }
+
+    if (rank >= 0) {
+      scored.push({
+        suggestion: {
+          listing: item,
+          matchField,
+          matchedLabel,
+        },
+        rank,
+      });
+    }
+  }
+
+  scored.sort((a, b) => {
+    if (a.rank !== b.rank) return a.rank - b.rank;
+    if (a.suggestion.listing.tier === b.suggestion.listing.tier) return 0;
+    return a.suggestion.listing.tier === 'premium' ? -1 : 1;
+  });
+
+  return scored.slice(0, maxResults).map((entry) => entry.suggestion);
+}
+
+export interface HighlightSegment {
+  text: string;
+  highlight: boolean;
+}
+
+export function splitTextByHighlight(text: string, query: string): HighlightSegment[] {
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery || trimmedQuery.length > 80 || text.length === 0) {
+    return [{ text, highlight: false }];
+  }
+
+  const lowerText = text.toLowerCase();
+  const lowerQuery = trimmedQuery.toLowerCase();
+  const segments: HighlightSegment[] = [];
+  let cursor = 0;
+
+  while (cursor < text.length) {
+    const matchIndex = lowerText.indexOf(lowerQuery, cursor);
+    if (matchIndex === -1) {
+      segments.push({ text: text.slice(cursor), highlight: false });
+      break;
+    }
+    if (matchIndex > cursor) {
+      segments.push({ text: text.slice(cursor, matchIndex), highlight: false });
+    }
+    const matchEnd = matchIndex + trimmedQuery.length;
+    segments.push({ text: text.slice(matchIndex, matchEnd), highlight: true });
+    cursor = matchEnd;
+  }
+
+  return segments.length > 0 ? segments : [{ text, highlight: false }];
+}
+
 
