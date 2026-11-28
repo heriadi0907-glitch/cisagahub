@@ -503,9 +503,10 @@ export function validateFreeRegistrationForm(
   if (form.signatureProduct.trim().length < 4) {
     errors.signatureProduct = 'Sebutkan minimal satu produk unggulan usaha Anda.';
   }
-  const parsedPrice = Number(form.estimatedPrice);
-  if (Number.isNaN(parsedPrice) || parsedPrice < 1000) {
-    errors.estimatedPrice = 'Masukkan kisaran harga mulai (minimal Rp1.000).';
+  const rawPrice = String(form.estimatedPrice ?? '').trim();
+  const parsedPrice = Number(rawPrice);
+  if (rawPrice === '' || !Number.isFinite(parsedPrice) || parsedPrice < 0) {
+    errors.estimatedPrice = 'Masukkan kisaran harga berupa angka yang valid.';
   }
 
   return errors;
@@ -531,9 +532,10 @@ export function validateAdminUmkmForm(
   if (!isValidIndonesianPhone(form.whatsapp)) {
     errors.whatsapp = 'Masukkan nomor WhatsApp aktif (contoh: 081234567890).';
   }
-  const parsedPrice = Number(form.price);
-  if (Number.isNaN(parsedPrice) || parsedPrice < 1000) {
-    errors.price = 'Harga kisaran minimal Rp1.000.';
+  const rawPrice = String(form.price ?? '').trim();
+  const parsedPrice = Number(rawPrice);
+  if (rawPrice === '' || !Number.isFinite(parsedPrice) || parsedPrice < 0) {
+    errors.price = 'Masukkan harga berupa angka yang valid.';
   }
   if (form.shortDescription.trim().length < 10) {
     errors.shortDescription = 'Deskripsi singkat minimal 10 karakter.';
@@ -557,9 +559,10 @@ export function validateAdminUmkmForm(
         errors.variants = 'Setiap nama menu atau layanan minimal 2 karakter.';
         break;
       }
-      const itemPrice = Number(item.price);
-      if (Number.isNaN(itemPrice) || itemPrice < 1000) {
-        errors.variants = 'Setiap harga menu atau layanan minimal Rp1.000.';
+      const rawItemPrice = String(item.price ?? '').trim();
+      const itemPrice = Number(rawItemPrice);
+      if (rawItemPrice === '' || !Number.isFinite(itemPrice) || itemPrice < 0) {
+        errors.variants = 'Setiap harga menu atau layanan harus berupa angka yang valid.';
         break;
       }
     }
@@ -622,12 +625,16 @@ function buildNormalizedVariantsFromForm(
 ) {
   if (form.variants && form.variants.length > 0) {
     return form.variants.map((item, idx) => {
-      const parsedItemPrice = Math.round(Number(item.price));
+      const rawItemPrice = String(item.price ?? '').trim();
+      const parsedItemPrice = Math.round(Number(rawItemPrice));
       const safeImage = item.image && isSafeUmkmImagePath(item.image) ? item.image.trim() : undefined;
       return {
         id: item.id && item.id.trim().length > 0 ? item.id.trim() : `${baseId}-v${idx + 1}`,
         label: item.label.trim(),
-        price: Number.isFinite(parsedItemPrice) && parsedItemPrice >= 1000 ? parsedItemPrice : fallbackPrice,
+        price:
+          rawItemPrice !== '' && Number.isFinite(parsedItemPrice) && parsedItemPrice >= 0
+            ? parsedItemPrice
+            : fallbackPrice,
         availabilityNote: item.availabilityNote.trim() || 'Tersedia',
         ...(safeImage ? { image: safeImage } : {}),
       };

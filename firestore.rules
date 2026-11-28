@@ -204,8 +204,7 @@ service cloud.firestore {
         data.tier in ['premium', 'reguler'] &&
         data.status in ['Aktif', 'Menunggu Verifikasi', 'Nonaktif'] &&
         data.price is number &&
-        data.price >= 1000 &&
-        data.price <= 100000000 &&
+        data.price >= 0 &&
         data.unitLabel is string &&
         data.unitLabel.size() >= 2 &&
         data.unitLabel.size() <= 80 &&
@@ -231,7 +230,7 @@ service cloud.firestore {
         data.variants[0].label.size() <= 80 &&
         'price' in data.variants[0] &&
         data.variants[0].price is number &&
-        data.variants[0].price >= 1000 &&
+        data.variants[0].price >= 0 &&
         data.createdAt is string &&
         data.createdAt.size() >= 4 &&
         data.createdAt.size() <= 40 &&

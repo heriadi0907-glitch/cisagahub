@@ -199,7 +199,7 @@ test('admin and free registration forms validate inputs and create proper tier e
     whatsapp: '123',
     tier: 'premium',
     status: 'Aktif',
-    price: '500',
+    price: '',
     unitLabel: '',
     shortDescription: 'Pendek',
     image: '',
@@ -209,6 +209,57 @@ test('admin and free registration forms validate inputs and create proper tier e
   assert.ok(invalidAdmin.whatsapp);
   assert.ok(invalidAdmin.price);
   assert.ok(invalidAdmin.shortDescription);
+
+  // Prices below Rp1.000 (e.g. 0, 500) and large values (e.g. 500000000) are valid without min/max caps
+  for (const freePrice of ['0', '500', '500000000']) {
+    const validAdminPrice = validateAdminUmkmForm({
+      businessName: 'Opak Ketan Cisaga',
+      ownerName: 'H. Rahmat',
+      productName: 'Opak Bakar Khas Cisaga',
+      category: 'Kuliner',
+      village: 'Desa Cisaga',
+      whatsapp: '081322445566',
+      tier: 'premium',
+      status: 'Aktif',
+      price: freePrice,
+      unitLabel: 'Bungkus 250g',
+      shortDescription: 'Opak ketan gurih dibakar di atas bara arang kelapa tradisional.',
+      image: '',
+      variants: [
+        {
+          label: 'Kemasan Mini',
+          price: freePrice,
+          availabilityNote: 'Tersedia',
+        },
+      ],
+    });
+    assert.equal(validAdminPrice.price, undefined);
+    assert.equal(validAdminPrice.variants, undefined);
+  }
+
+  const createdLowPrice = createAdminListingEntry({
+    businessName: 'Jajanan Pasar Cisaga',
+    ownerName: 'Ibu Imas',
+    productName: 'Gorengan Satuan',
+    category: 'Kuliner',
+    village: 'Desa Cisaga',
+    whatsapp: '081322445566',
+    tier: 'reguler',
+    status: 'Aktif',
+    price: '500',
+    unitLabel: 'Per Pcs',
+    shortDescription: 'Aneka gorengan hangat harian mulai harga satuan lima ratus rupiah.',
+    image: '',
+    variants: [
+      { label: 'Bakwan Satuan', price: '500', availabilityNote: 'Ready' },
+      { label: 'Gratis Tester', price: '0', availabilityNote: 'Promo' },
+      { label: 'Paket Kemitraan Besar', price: '250000000', availabilityNote: 'Custom' },
+    ],
+  });
+  assert.equal(createdLowPrice.price, 500);
+  assert.equal(createdLowPrice.variants[0].price, 500);
+  assert.equal(createdLowPrice.variants[1].price, 0);
+  assert.equal(createdLowPrice.variants[2].price, 250000000);
 
   const createdAdmin = createAdminListingEntry({
     businessName: 'Opak Ketan Cisaga',
@@ -235,10 +286,23 @@ test('admin and free registration forms validate inputs and create proper tier e
     category: 'Kuliner',
     whatsapp: '081',
     signatureProduct: 'Ku',
-    estimatedPrice: '100',
+    estimatedPrice: 'abc',
   });
   assert.ok(invalidFree.businessName);
   assert.ok(invalidFree.estimatedPrice);
+
+  for (const freeEstimate of ['0', '100', '500', '350000000']) {
+    const validFree = validateFreeRegistrationForm({
+      businessName: 'Kerupuk Melarat Cisaga',
+      ownerName: 'Ibu Nani',
+      village: 'Desa Wangunjaya',
+      category: 'Kuliner',
+      whatsapp: '085211334455',
+      signatureProduct: 'Kerupuk Pasir Warna',
+      estimatedPrice: freeEstimate,
+    });
+    assert.equal(validFree.estimatedPrice, undefined);
+  }
 
   const createdFree = createFreeListingEntry({
     businessName: 'Kerupuk Melarat Cisaga',
@@ -247,10 +311,11 @@ test('admin and free registration forms validate inputs and create proper tier e
     category: 'Kuliner',
     whatsapp: '085211334455',
     signatureProduct: 'Kerupuk Pasir Warna',
-    estimatedPrice: '15000',
+    estimatedPrice: '500',
   });
   assert.equal(createdFree.tier, 'reguler');
   assert.equal(createdFree.status, 'Menunggu Verifikasi');
+  assert.equal(createdFree.price, 500);
 });
 
 test('admin menu/service items and uploaded gallery photos are preserved and searchable', () => {

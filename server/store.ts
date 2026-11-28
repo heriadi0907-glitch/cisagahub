@@ -476,7 +476,11 @@ export function createServerStore(
     const whatsapp = typeof raw.whatsapp === 'string' ? raw.whatsapp.trim() : '';
     const signatureProduct =
       typeof raw.signatureProduct === 'string' ? raw.signatureProduct.trim() : '';
-    const parsedPrice = Number(raw.estimatedPrice);
+    const rawEstimatedPrice =
+      typeof raw.estimatedPrice === 'number' || typeof raw.estimatedPrice === 'string'
+        ? String(raw.estimatedPrice).trim()
+        : '';
+    const parsedPrice = Number(rawEstimatedPrice);
 
     if (businessName.length < 3 || ownerName.length < 3) {
       throw new StoreHttpError(400, 'Nama usaha dan nama pemilik minimal 3 karakter.');
@@ -493,8 +497,8 @@ export function createServerStore(
     if (signatureProduct.length < 4) {
       throw new StoreHttpError(400, 'Produk unggulan minimal 4 karakter.');
     }
-    if (Number.isNaN(parsedPrice) || parsedPrice < 1000) {
-      throw new StoreHttpError(400, 'Kisaran harga minimal Rp1.000.');
+    if (rawEstimatedPrice === '' || !Number.isFinite(parsedPrice) || parsedPrice < 0) {
+      throw new StoreHttpError(400, 'Masukkan kisaran harga berupa angka yang valid.');
     }
 
     const id = `umkm-free-${Date.now()}`;
@@ -543,7 +547,11 @@ export function createServerStore(
       ? (raw.status as UmkmStatus)
       : null;
     const whatsapp = typeof raw.whatsapp === 'string' ? raw.whatsapp.trim() : '';
-    const parsedPrice = Number(raw.price);
+    const rawPrice =
+      typeof raw.price === 'number' || typeof raw.price === 'string'
+        ? String(raw.price).trim()
+        : '';
+    const parsedPrice = Number(rawPrice);
     const unitLabel =
       typeof raw.unitLabel === 'string' && raw.unitLabel.trim().length > 0
         ? raw.unitLabel.trim()
@@ -563,8 +571,8 @@ export function createServerStore(
     if (!isValidIndonesianPhone(whatsapp)) {
       throw new StoreHttpError(400, 'Masukkan nomor WhatsApp aktif yang valid.');
     }
-    if (Number.isNaN(parsedPrice) || parsedPrice < 1000) {
-      throw new StoreHttpError(400, 'Harga kisaran minimal Rp1.000.');
+    if (rawPrice === '' || !Number.isFinite(parsedPrice) || parsedPrice < 0) {
+      throw new StoreHttpError(400, 'Masukkan harga berupa angka yang valid.');
     }
     if (shortDescription.length < 10) {
       throw new StoreHttpError(400, 'Deskripsi singkat minimal 10 karakter.');
@@ -597,7 +605,11 @@ export function createServerStore(
       }
       parsedVariants = raw.variants.map((item) => {
         const label = typeof item?.label === 'string' ? item.label.trim() : '';
-        const itemPrice = Number(item?.price);
+        const rawItemPrice =
+          typeof item?.price === 'number' || typeof item?.price === 'string'
+            ? String(item.price).trim()
+            : '';
+        const itemPrice = Number(rawItemPrice);
         const availabilityNote =
           typeof item?.availabilityNote === 'string' && item.availabilityNote.trim().length > 0
             ? item.availabilityNote.trim().slice(0, 60)
@@ -611,8 +623,8 @@ export function createServerStore(
         if (label.length < 2 || label.length > 80) {
           throw new StoreHttpError(400, 'Setiap nama menu atau layanan harus 2–80 karakter.');
         }
-        if (Number.isNaN(itemPrice) || itemPrice < 1000) {
-          throw new StoreHttpError(400, 'Setiap harga menu atau layanan minimal Rp1.000.');
+        if (rawItemPrice === '' || !Number.isFinite(itemPrice) || itemPrice < 0) {
+          throw new StoreHttpError(400, 'Setiap harga menu atau layanan harus berupa angka yang valid.');
         }
 
         return {

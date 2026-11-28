@@ -476,4 +476,59 @@ test('resolveWritableDataDir falls back to writable directory when preferred pat
   }
 });
 
+test('server store accepts any non-negative product price without Rp1.000 minimum or maximum cap', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cisaga-free-price-test-'));
+  try {
+    const store = createServerStore(tempDir);
+
+    const lowFree = store.createFreeRegistration({
+      businessName: 'Warung Jajan Cisaga',
+      ownerName: 'Ibu Yeti',
+      village: 'Desa Cisaga',
+      category: 'Kuliner',
+      whatsapp: '081234567890',
+      signatureProduct: 'Comro Satuan',
+      estimatedPrice: '500',
+    });
+    assert.equal(lowFree.price, 500);
+
+    const zeroAdmin = store.createAdminListing({
+      businessName: 'Kriya Gratis Sampel',
+      ownerName: 'Kang Dedi',
+      productName: 'Sampel Anyaman',
+      category: 'Kerajinan',
+      village: 'Desa Tanjungjaya',
+      whatsapp: '081299001122',
+      tier: 'reguler',
+      status: 'Aktif',
+      price: '0',
+      unitLabel: 'Sampel',
+      shortDescription: 'Contoh produk gratis atau harga khusus sesuai pesanan.',
+      image: '',
+      variants: [
+        { label: 'Sampel Gratis', price: '0', availabilityNote: 'Ready' },
+        { label: 'Kontrak Proyek Besar', price: '250000000', availabilityNote: 'Pre-order' },
+      ],
+    });
+    assert.equal(zeroAdmin.price, 0);
+    assert.equal(zeroAdmin.variants[1].price, 250000000);
+
+    assert.throws(
+      () =>
+        store.createFreeRegistration({
+          businessName: 'Warung Jajan Cisaga',
+          ownerName: 'Ibu Yeti',
+          village: 'Desa Cisaga',
+          category: 'Kuliner',
+          whatsapp: '081234567890',
+          signatureProduct: 'Comro Satuan',
+          estimatedPrice: '',
+        }),
+      /angka yang valid/
+    );
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
 

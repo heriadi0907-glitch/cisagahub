@@ -596,8 +596,7 @@ export function AdminUmkmForm({
               <input
                 id="admin-price"
                 type="number"
-                min={1000}
-                step={500}
+                step="any"
                 value={form.price}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -1225,8 +1224,7 @@ export function AdminUmkmForm({
                         <input
                           id={`admin-variant-price-${idx}`}
                           type="number"
-                          min={1000}
-                          step={500}
+                          step="any"
                           value={item.price}
                           onChange={(e) => handleUpdateVariantField(idx, 'price', e.target.value)}
                           className="w-full px-2.5 py-1.5 text-xs sm:text-sm font-mono tabular-nums bg-[#F8FAFC] border border-[#E2E8F0] rounded-md focus:outline-none focus:bg-white focus:border-[#0F2744]"

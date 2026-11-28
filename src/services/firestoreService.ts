@@ -147,7 +147,12 @@ function mapDocToListing(id: string, data: DocumentData): UmkmListing {
   const variants: ProductVariant[] = variantsRaw.map((v, idx) => ({
     id: typeof v?.id === 'string' ? v.id : `${id}-v${idx + 1}`,
     label: typeof v?.label === 'string' ? v.label : 'Kemasan Standar',
-    price: typeof v?.price === 'number' ? v.price : Number(v?.price) || 1000,
+    price:
+      typeof v?.price === 'number'
+        ? v.price
+        : Number.isFinite(Number(v?.price)) && Number(v?.price) >= 0
+          ? Number(v?.price)
+          : 0,
     availabilityNote:
       typeof v?.availabilityNote === 'string' ? v.availabilityNote : 'Tersedia',
     ...(typeof v?.image === 'string' && v.image.trim() ? { image: v.image } : {}),
@@ -178,7 +183,12 @@ function mapDocToListing(id: string, data: DocumentData): UmkmListing {
     status: VALID_STATUSES.has(data.status as UmkmStatus)
       ? (data.status as UmkmStatus)
       : 'Aktif',
-    price: typeof data.price === 'number' ? data.price : Number(data.price) || 1000,
+    price:
+      typeof data.price === 'number'
+        ? data.price
+        : Number.isFinite(Number(data.price)) && Number(data.price) >= 0
+          ? Number(data.price)
+          : 0,
     unitLabel: String(data.unitLabel ?? 'Kemasan Standar'),
     shortDescription: String(data.shortDescription ?? ''),
     fullDescription: String(data.fullDescription ?? ''),
@@ -194,7 +204,12 @@ function mapDocToListing(id: string, data: DocumentData): UmkmListing {
             {
               id: `${id}-std`,
               label: String(data.unitLabel ?? 'Kemasan Standar'),
-              price: typeof data.price === 'number' ? data.price : 1000,
+              price:
+                typeof data.price === 'number'
+                  ? data.price
+                  : Number.isFinite(Number(data.price)) && Number(data.price) >= 0
+                    ? Number(data.price)
+                    : 0,
               availabilityNote: 'Tersedia',
             },
           ],
@@ -416,7 +431,8 @@ export async function createFreeRegistrationInFirestore(
   const whatsappDigits =
     typeof raw.whatsapp === 'string' ? raw.whatsapp.replace(/[^0-9]/g, '').slice(0, 15) : '';
   const signatureProduct = sanitizeClientText(raw.signatureProduct, false).slice(0, 120);
-  const parsedPrice = Math.min(100_000_000, Math.round(Number(raw.estimatedPrice)));
+  const rawEstimatedPrice = String(raw.estimatedPrice ?? '').trim();
+  const parsedPrice = Math.round(Number(rawEstimatedPrice));
 
   if (businessName.length < 3 || ownerName.length < 3) {
     throw new Error('Nama usaha dan nama pemilik minimal 3 karakter.');
@@ -437,8 +453,8 @@ export async function createFreeRegistrationInFirestore(
   if (signatureProduct.length < 4) {
     throw new Error('Produk unggulan minimal 4 karakter.');
   }
-  if (Number.isNaN(parsedPrice) || parsedPrice < 1000) {
-    throw new Error('Kisaran harga minimal Rp1.000.');
+  if (rawEstimatedPrice === '' || !Number.isFinite(parsedPrice) || parsedPrice < 0) {
+    throw new Error('Masukkan kisaran harga berupa angka yang valid.');
   }
 
   const id = `umkm-free-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`;
@@ -498,7 +514,8 @@ function buildValidatedAdminListingFields(raw: AdminUmkmFormData, baseId: string
   const status = VALID_STATUSES.has(raw.status) ? raw.status : null;
   const whatsappDigits =
     typeof raw.whatsapp === 'string' ? raw.whatsapp.replace(/[^0-9]/g, '').slice(0, 15) : '';
-  const parsedPrice = Math.min(100_000_000, Math.round(Number(raw.price)));
+  const rawPrice = String(raw.price ?? '').trim();
+  const parsedPrice = Math.round(Number(rawPrice));
   const unitLabel =
     sanitizeClientText(raw.unitLabel, false).slice(0, 80) || 'Kemasan Standar';
   const shortDescription = sanitizeClientText(raw.shortDescription, false).slice(0, 300);
@@ -519,8 +536,8 @@ function buildValidatedAdminListingFields(raw: AdminUmkmFormData, baseId: string
   ) {
     throw new Error('Masukkan nomor WhatsApp aktif yang valid.');
   }
-  if (Number.isNaN(parsedPrice) || parsedPrice < 1000) {
-    throw new Error('Harga kisaran minimal Rp1.000.');
+  if (rawPrice === '' || !Number.isFinite(parsedPrice) || parsedPrice < 0) {
+    throw new Error('Masukkan harga berupa angka yang valid.');
   }
   if (shortDescription.length < 10) {
     throw new Error('Deskripsi singkat minimal 10 karakter.');
@@ -544,12 +561,13 @@ function buildValidatedAdminListingFields(raw: AdminUmkmFormData, baseId: string
     rawVariants.length > 0
       ? rawVariants.map((item, idx) => {
           const label = sanitizeClientText(item?.label, false).slice(0, 80);
-          const itemPrice = Math.min(100_000_000, Math.round(Number(item?.price)));
+          const rawItemPrice = String(item?.price ?? '').trim();
+          const itemPrice = Math.round(Number(rawItemPrice));
           if (label.length < 2) {
             throw new Error('Setiap nama menu atau layanan harus 2–80 karakter.');
           }
-          if (Number.isNaN(itemPrice) || itemPrice < 1000) {
-            throw new Error('Setiap harga menu atau layanan minimal Rp1.000.');
+          if (rawItemPrice === '' || !Number.isFinite(itemPrice) || itemPrice < 0) {
+            throw new Error('Setiap harga menu atau layanan harus berupa angka yang valid.');
           }
           const availabilityNote =
             sanitizeClientText(item?.availabilityNote, false).slice(0, 60) || 'Tersedia';

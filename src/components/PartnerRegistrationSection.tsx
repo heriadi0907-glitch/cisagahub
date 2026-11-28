@@ -339,8 +339,7 @@ export function PartnerRegistrationSection({
                   <input
                     id="partner-price"
                     type="number"
-                    min={1000}
-                    step={500}
+                    step="any"
                     value={form.estimatedPrice}
                     onChange={(e) => {
                       setForm({ ...form, estimatedPrice: e.target.value });

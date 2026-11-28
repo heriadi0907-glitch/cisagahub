@@ -72,5 +72,11 @@ test('firestore.rules enforces Dirty Dozen security invariants on contacts and u
   assert.match(rulesSource, /'socialLinks'/);
   assert.match(rulesSource, /function isValidSocialLinksMap\(links\)/);
   assert.match(rulesSource, /\^https\?:\/\/\[\^\\\\s<>\]\+\$/);
+
+  // 9. Prices on umkm_listings allow free numeric entry >= 0 with no Rp1.000 min or max cap
+  assert.match(rulesSource, /data\.price >= 0/);
+  assert.match(rulesSource, /data\.variants\[0\]\.price >= 0/);
+  assert.doesNotMatch(rulesSource, /price >= 1000/);
+  assert.doesNotMatch(rulesSource, /price <= 100000000/);
 });
 
